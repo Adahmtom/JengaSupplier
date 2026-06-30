@@ -57,6 +57,24 @@ export function PortalSidebar() {
                 <li key={i} className={styles.skeleton} />
               ))}
             </ul>
+
+            <span className={styles.sectionLabel}>
+              {lang === 'fr' ? 'Communauté' : 'Community'}
+            </span>
+            <ul role="list" className={styles.navList}>
+              {portals?.map((portal) => (
+                <SidebarItem
+                  key={portal._id + '-community'}
+                  href={`/community/${portal.slug}`}
+                  icon="💬"
+                  label={portal.name}
+                  active={pathname === `/community/${portal.slug}`}
+                />
+              ))}
+              {!portals && Array.from({ length: 3 }).map((_, i) => (
+                <li key={i} className={styles.skeleton} />
+              ))}
+            </ul>
           </nav>
         </div>
 
@@ -148,6 +166,23 @@ export function PortalSidebar() {
                     </Link>
                   </li>
                 ))}
+                {portals && portals.length > 0 && (
+                  <li style={{ paddingTop: 'var(--space-2)', paddingBottom: 2, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-text-subtle)', fontWeight: 700, fontFamily: 'var(--font-sans)', paddingLeft: 'var(--space-5)' }}>
+                    {lang === 'fr' ? 'Communauté' : 'Community'}
+                  </li>
+                )}
+                {portals?.map((portal) => (
+                  <li key={portal._id + '-community'}>
+                    <Link
+                      href={`/community/${portal.slug}`}
+                      className={`${styles.sheetItem} ${pathname === `/community/${portal.slug}` ? styles.sheetItemActive : ''}`}
+                      onClick={() => setSheetOpen(false)}
+                    >
+                      <span className={styles.sheetIcon}>💬</span>
+                      {portal.name}
+                    </Link>
+                  </li>
+                ))}
               </ul>
             </nav>
             <div className={styles.sheetBottom}>
@@ -184,20 +219,20 @@ export function PortalSidebar() {
             aria-label="Ouvrir les catégories"
           >
             <span className={styles.mobileIcon}>🗂</span>
-            {lang === 'fr' ? 'Catégories' : 'Categories'}
+            {lang === 'fr' ? 'Catégories' : 'Cat.'}
+          </button>
+          <button
+            className={`${styles.mobileNavItem} ${pathname.startsWith('/community') ? styles.mobileActive : ''}`}
+            onClick={() => setSheetOpen(true)}
+            aria-label="Communauté"
+          >
+            <span className={styles.mobileIcon}>💬</span>
+            {lang === 'fr' ? 'Communauté' : 'Community'}
           </button>
           <Link href="/account" className={`${styles.mobileNavItem} ${isActive('/account') ? styles.mobileActive : ''}`}>
             <span className={styles.mobileIcon}>👤</span>
             Compte
           </Link>
-          <button
-            className={styles.mobileNavItem}
-            onClick={() => signOut({ redirectUrl: '/' })}
-            aria-label={t.signOut}
-          >
-            <span className={styles.mobileIcon}>⏻</span>
-            {lang === 'fr' ? 'Sortir' : 'Out'}
-          </button>
         </div>
       </nav>
     </>

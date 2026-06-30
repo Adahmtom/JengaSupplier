@@ -12,6 +12,7 @@ const NAV = [
   { href: '/admin/drops',     icon: '📁', label: 'All Vendors' },
   { href: '/admin/categories',icon: '🗂', label: 'Categories' },
   { href: '/admin/members',   icon: '👥', label: 'Members' },
+  { href: '/admin/community', icon: '💬', label: 'Community' },
   { href: '/admin/audit',     icon: '📋', label: 'Audit Log' },
   { href: '/admin/waitlist',  icon: '📝', label: 'Waitlist' },
 ]

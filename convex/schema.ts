@@ -109,6 +109,35 @@ export default defineSchema({
     .index('by_email', ['email'])
     .index('by_service', ['service']),
 
+  // ── Community ─────────────────────────────────────────────────────────────
+  communityPosts: defineTable({
+    portalId: v.id('portals'),
+    authorId: v.id('users'),
+    body: v.string(),
+    imageStorageId: v.optional(v.id('_storage')),
+    isHidden: v.boolean(),
+    hiddenReason: v.optional(v.string()),
+  })
+    .index('by_portal', ['portalId'])
+    .index('by_portal_hidden', ['portalId', 'isHidden'])
+    .index('by_author', ['authorId']),
+
+  communityReactions: defineTable({
+    postId: v.id('communityPosts'),
+    userId: v.id('users'),
+    emoji: v.string(),
+  })
+    .index('by_post', ['postId'])
+    .index('by_post_user_emoji', ['postId', 'userId', 'emoji']),
+
+  communityReports: defineTable({
+    postId: v.id('communityPosts'),
+    reportedBy: v.id('users'),
+    reason: v.string(),
+  })
+    .index('by_post', ['postId'])
+    .index('by_reporter', ['reportedBy']),
+
   // ── Audit log (SOC2) ───────────────────────────────────────────────────────
   // Immutable by design — no public update or delete mutations exist.
   // Written only via internal.audit.write (server-side only, client-inaccessible).
