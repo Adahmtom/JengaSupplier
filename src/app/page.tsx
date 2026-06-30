@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Nav } from '@/components/nav/Nav'
 import { Hero } from '@/components/hero/Hero'
 import { Features } from '@/components/features/Features'
@@ -56,20 +56,20 @@ export default function LandingPage() {
               </p>
               <p style={{ fontFamily: 'var(--font-serif)', fontSize: '2rem', fontWeight: 700, color: 'var(--color-gold)' }}>$3 500</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', marginTop: 'auto' }}>
-                {[
-                  { label: 'Septembre 2026', service: 'travel-sep-2026' },
-                  { label: 'Avril 2027',     service: 'travel-apr-2027' },
-                ].map(({ label, service }) => (
-                  <div key={service} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 'var(--space-3) var(--space-4)', background: 'var(--color-surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border-subtle)' }}>
-                    <span style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>📅 {label}</span>
-                    <button
-                      onClick={() => setWaitlist({ service, serviceLabel: 'Voyage en Chine avec Belle', date: label })}
-                      style={{ fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-gold)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700, padding: 0 }}
-                    >
-                      Rejoindre la liste →
-                    </button>
-                  </div>
-                ))}
+                <SessionSlot
+                  label="Septembre 2026"
+                  opensLabel="Ouverture : Avril 2026"
+                  deadline={new Date('2026-09-01T00:00:00')}
+                  service="travel-sep-2026"
+                  serviceLabel="Voyage en Chine avec Belle & l'équipe Jenga"
+                  onJoin={setWaitlist}
+                />
+                <SessionSlot
+                  label="Avril 2027"
+                  service="travel-apr-2027"
+                  serviceLabel="Voyage en Chine avec Belle & l'équipe Jenga"
+                  onJoin={setWaitlist}
+                />
               </div>
             </div>
 
@@ -87,20 +87,20 @@ export default function LandingPage() {
               </p>
               <p style={{ fontFamily: 'var(--font-serif)', fontSize: '2rem', fontWeight: 700, color: 'var(--color-gold)' }}>$1 200</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', marginTop: 'auto' }}>
-                {[
-                  { label: 'Septembre 2026', service: 'sourcing-sep-2026' },
-                  { label: 'Avril 2027',     service: 'sourcing-apr-2027' },
-                ].map(({ label, service }) => (
-                  <div key={service} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 'var(--space-3) var(--space-4)', background: 'var(--color-surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border-subtle)' }}>
-                    <span style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>📅 {label}</span>
-                    <button
-                      onClick={() => setWaitlist({ service, serviceLabel: 'Sourcing en Chine pour vous', date: label })}
-                      style={{ fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-gold)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700, padding: 0 }}
-                    >
-                      Rejoindre la liste →
-                    </button>
-                  </div>
-                ))}
+                <SessionSlot
+                  label="Septembre 2026"
+                  opensLabel="Ouverture : Avril 2026"
+                  deadline={new Date('2026-09-01T00:00:00')}
+                  service="sourcing-sep-2026"
+                  serviceLabel="Sourcing de produits en Chine pour vous"
+                  onJoin={setWaitlist}
+                />
+                <SessionSlot
+                  label="Avril 2027"
+                  service="sourcing-apr-2027"
+                  serviceLabel="Sourcing de produits en Chine pour vous"
+                  onJoin={setWaitlist}
+                />
               </div>
             </div>
 
@@ -122,5 +122,132 @@ export default function LandingPage() {
         />
       )}
     </>
+  )
+}
+
+// ── Countdown hook ────────────────────────────────────────────────────────────
+
+function useCountdown(target: Date) {
+  const getRemaining = () => Math.max(0, target.getTime() - Date.now())
+  const [ms, setMs] = useState(getRemaining)
+
+  useEffect(() => {
+    if (ms === 0) return
+    const id = setInterval(() => setMs(getRemaining()), 1000)
+    return () => clearInterval(id)
+  }, [ms])
+
+  const total = ms / 1000
+  const days  = Math.floor(total / 86400)
+  const hours = Math.floor((total % 86400) / 3600)
+  const mins  = Math.floor((total % 3600) / 60)
+  const secs  = Math.floor(total % 60)
+  return { days, hours, mins, secs, expired: ms === 0 }
+}
+
+// ── SessionSlot ───────────────────────────────────────────────────────────────
+
+interface SessionSlotProps {
+  label: string
+  opensLabel?: string
+  deadline?: Date
+  service: string
+  serviceLabel: string
+  onJoin: (entry: { service: string; serviceLabel: string; date: string }) => void
+}
+
+function SessionSlot({ label, opensLabel, deadline, service, serviceLabel, onJoin }: SessionSlotProps) {
+  const countdown = useCountdown(deadline ?? new Date(0))
+
+  const pad = (n: number) => String(n).padStart(2, '0')
+
+  return (
+    <div style={{
+      background: 'var(--color-surface)',
+      border: '1px solid var(--color-border-subtle)',
+      borderRadius: 'var(--radius-md)',
+      padding: 'var(--space-4)',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 'var(--space-3)',
+    }}>
+      {/* Row 1: date label + opens badge */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
+        <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--color-text)' }}>
+          📅 {label}
+        </span>
+        {opensLabel && (
+          <span style={{
+            fontSize: '9px',
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            color: 'var(--color-gold)',
+            background: 'rgba(201,168,76,0.1)',
+            border: '1px solid rgba(201,168,76,0.25)',
+            borderRadius: '999px',
+            padding: '2px 8px',
+            fontWeight: 600,
+          }}>
+            {opensLabel}
+          </span>
+        )}
+      </div>
+
+      {/* Row 2: countdown (only when deadline provided and not expired) */}
+      {deadline && !countdown.expired && (
+        <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+          {[
+            { v: countdown.days,  u: 'j' },
+            { v: countdown.hours, u: 'h' },
+            { v: countdown.mins,  u: 'm' },
+            { v: countdown.secs,  u: 's' },
+          ].map(({ v, u }) => (
+            <div key={u} style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              minWidth: '44px',
+              background: 'var(--color-surface-2)',
+              border: '1px solid var(--color-border-subtle)',
+              borderRadius: 'var(--radius-sm)',
+              padding: '4px 6px',
+            }}>
+              <span style={{ fontFamily: 'var(--font-mono, monospace)', fontSize: '1.1rem', fontWeight: 700, color: 'var(--color-text)', lineHeight: 1 }}>
+                {pad(v)}
+              </span>
+              <span style={{ fontSize: '9px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-subtle)', marginTop: '2px' }}>
+                {u}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+      {deadline && countdown.expired && (
+        <span style={{ fontSize: '11px', color: 'var(--color-text-subtle)', letterSpacing: '0.06em' }}>Session terminée</span>
+      )}
+
+      {/* Row 3: CTA */}
+      <button
+        onClick={() => onJoin({ service, serviceLabel, date: label })}
+        style={{
+          alignSelf: 'flex-start',
+          fontSize: '10px',
+          letterSpacing: '0.12em',
+          textTransform: 'uppercase',
+          fontWeight: 700,
+          color: '#000',
+          background: 'var(--color-gold)',
+          border: 'none',
+          borderRadius: 'var(--radius-sm)',
+          padding: '8px 16px',
+          cursor: 'pointer',
+          transition: 'opacity 150ms',
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.85')}
+        onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+      >
+        Rejoindre la liste d&apos;attente →
+      </button>
+    </div>
   )
 }
