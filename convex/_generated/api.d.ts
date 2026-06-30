@@ -19,6 +19,7 @@ import type * as stats from "../stats.js";
 import type * as stripe from "../stripe.js";
 import type * as subscriptions from "../subscriptions.js";
 import type * as users from "../users.js";
+import type * as waitlist from "../waitlist.js";
 
 import type {
   ApiFromModules,
@@ -38,6 +39,7 @@ declare const fullApi: ApiFromModules<{
   stripe: typeof stripe;
   subscriptions: typeof subscriptions;
   users: typeof users;
+  waitlist: typeof waitlist;
 }>;
 
 /**
