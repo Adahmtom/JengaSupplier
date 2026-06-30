@@ -58,15 +58,9 @@ export default function LandingPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', marginTop: 'auto' }}>
                 <SessionSlot
                   label="Septembre 2026"
-                  opensLabel="Ouverture : Avril 2026"
+                  startLabel="Début : Avril 2026"
                   deadline={new Date('2026-09-01T00:00:00')}
                   service="travel-sep-2026"
-                  serviceLabel="Voyage en Chine avec Belle & l'équipe Jenga"
-                  onJoin={setWaitlist}
-                />
-                <SessionSlot
-                  label="Avril 2027"
-                  service="travel-apr-2027"
                   serviceLabel="Voyage en Chine avec Belle & l'équipe Jenga"
                   onJoin={setWaitlist}
                 />
@@ -89,15 +83,9 @@ export default function LandingPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', marginTop: 'auto' }}>
                 <SessionSlot
                   label="Septembre 2026"
-                  opensLabel="Ouverture : Avril 2026"
+                  startLabel="Début : Avril 2026"
                   deadline={new Date('2026-09-01T00:00:00')}
                   service="sourcing-sep-2026"
-                  serviceLabel="Sourcing de produits en Chine pour vous"
-                  onJoin={setWaitlist}
-                />
-                <SessionSlot
-                  label="Avril 2027"
-                  service="sourcing-apr-2027"
                   serviceLabel="Sourcing de produits en Chine pour vous"
                   onJoin={setWaitlist}
                 />
@@ -149,14 +137,14 @@ function useCountdown(target: Date) {
 
 interface SessionSlotProps {
   label: string
-  opensLabel?: string
+  startLabel?: string
   deadline?: Date
   service: string
   serviceLabel: string
   onJoin: (entry: { service: string; serviceLabel: string; date: string }) => void
 }
 
-function SessionSlot({ label, opensLabel, deadline, service, serviceLabel, onJoin }: SessionSlotProps) {
+function SessionSlot({ label, startLabel, deadline, service, serviceLabel, onJoin }: SessionSlotProps) {
   const countdown = useCountdown(deadline ?? new Date(0))
 
   const pad = (n: number) => String(n).padStart(2, '0')
@@ -171,12 +159,12 @@ function SessionSlot({ label, opensLabel, deadline, service, serviceLabel, onJoi
       flexDirection: 'column',
       gap: 'var(--space-3)',
     }}>
-      {/* Row 1: date label + opens badge */}
+      {/* Row 1: date label + start badge */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
         <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--color-text)' }}>
           📅 {label}
         </span>
-        {opensLabel && (
+        {startLabel && (
           <span style={{
             fontSize: '9px',
             letterSpacing: '0.1em',
@@ -188,7 +176,7 @@ function SessionSlot({ label, opensLabel, deadline, service, serviceLabel, onJoi
             padding: '2px 8px',
             fontWeight: 600,
           }}>
-            {opensLabel}
+            {startLabel}
           </span>
         )}
       </div>
@@ -197,25 +185,24 @@ function SessionSlot({ label, opensLabel, deadline, service, serviceLabel, onJoi
       {deadline && !countdown.expired && (
         <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
           {[
-            { v: countdown.days,  u: 'j' },
-            { v: countdown.hours, u: 'h' },
-            { v: countdown.mins,  u: 'm' },
-            { v: countdown.secs,  u: 's' },
+            { v: countdown.days,  u: 'Jours' },
+            { v: countdown.hours, u: 'Heures' },
+            { v: countdown.mins,  u: 'Min' },
+            { v: countdown.secs,  u: 'Sec' },
           ].map(({ v, u }) => (
             <div key={u} style={{
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              minWidth: '44px',
-              background: 'var(--color-surface-2)',
-              border: '1px solid var(--color-border-subtle)',
+              minWidth: '52px',
+              background: 'var(--color-gold)',
               borderRadius: 'var(--radius-sm)',
-              padding: '4px 6px',
+              padding: '6px 8px',
             }}>
-              <span style={{ fontFamily: 'var(--font-mono, monospace)', fontSize: '1.1rem', fontWeight: 700, color: 'var(--color-text)', lineHeight: 1 }}>
+              <span style={{ fontFamily: 'var(--font-mono, monospace)', fontSize: '1.2rem', fontWeight: 800, color: '#000', lineHeight: 1 }}>
                 {pad(v)}
               </span>
-              <span style={{ fontSize: '9px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-subtle)', marginTop: '2px' }}>
+              <span style={{ fontSize: '8px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(0,0,0,0.6)', marginTop: '3px', fontWeight: 600 }}>
                 {u}
               </span>
             </div>
