@@ -231,19 +231,19 @@
   left: 0;
   right: 0;
   z-index: 100;
+  background: rgba(var(--color-surface-rgb, 18 18 18) / 0.96);
   background: var(--color-surface);
-  border-top: 1px solid var(--color-border);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  padding: 0 var(--space-2);
+  border-top: 1px solid var(--color-border-subtle);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  padding: 0 var(--space-1);
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .mobileNavInner {
   display: flex;
   align-items: stretch;
-  height: 60px;
-  gap: 0;
+  height: 62px;
 }
 
 .mobileNavItem {
@@ -253,10 +253,10 @@
   align-items: center;
   justify-content: center;
   gap: 4px;
-  font-size: 10px;
-  letter-spacing: 0.04em;
+  font-size: 9px;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--color-text-muted);
+  color: var(--color-text-subtle);
   text-decoration: none;
   font-family: var(--font-sans);
   font-weight: 600;
@@ -268,17 +268,18 @@
   cursor: pointer;
 }
 
-.mobileNavItem:hover,
-.mobileNavItem.mobileActive {
-  color: var(--color-gold);
+.mobileNavItem:hover { color: var(--color-text-muted); }
+
+.mobileActive {
+  color: var(--color-gold) !important;
 }
 
-.mobileNavItem.mobileActive::after {
+.mobileActive::after {
   content: '';
   position: absolute;
   top: 0;
-  left: 20%;
-  right: 20%;
+  left: 15%;
+  right: 15%;
   height: 2px;
   background: var(--color-gold);
   border-radius: 0 0 2px 2px;
@@ -289,3 +290,117 @@
 @media (max-width: 700px) {
   .mobileNav { display: block; }
 }
+
+/* ── Categories slide-up sheet ── */
+.sheetOverlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 110;
+}
+
+.sheet {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 120;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  max-height: 80dvh;
+  overflow-y: auto;
+}
+
+@media (max-width: 700px) {
+  .sheetOverlay { display: block; }
+  .sheet { display: block; }
+}
+
+.sheetHandle {
+  width: 36px;
+  height: 4px;
+  background: var(--color-border);
+  border-radius: 2px;
+  margin: 10px auto 0;
+}
+
+.sheetHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.sheetTitle {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-subtle);
+}
+
+.sheetClose {
+  background: none;
+  border: none;
+  color: var(--color-text-subtle);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  transition: color var(--duration-fast);
+}
+.sheetClose:hover { color: var(--color-text); }
+
+.sheetList { list-style: none; padding: var(--space-2) 0; }
+
+.sheetItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 14px var(--space-5);
+  font-size: 15px;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  transition: all var(--duration-fast);
+}
+.sheetItem:hover { background: var(--color-surface-2); color: var(--color-text-primary); }
+.sheetItemActive { color: var(--color-gold) !important; background: rgba(201, 168, 76, 0.06) !important; }
+
+.sheetIcon { font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
+
+.sheetBottom {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: var(--space-2) 0;
+  border-top: 1px solid var(--color-border-subtle);
+  margin-top: var(--space-2);
+}
+
+.sheetAction {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 13px var(--space-5);
+  font-size: 14px;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: color var(--duration-fast), background var(--duration-fast);
+  width: 100%;
+}
+.sheetAction:hover { color: var(--color-text-primary); background: var(--color-surface-2); }

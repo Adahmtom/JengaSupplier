@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useQuery } from 'convex/react'
@@ -17,6 +18,7 @@ export function PortalSidebar() {
   const { signOut } = useClerk()
   const { t, lang, toggle } = useLang()
   const { theme, toggleTheme } = useTheme()
+  const [sheetOpen, setSheetOpen] = useState(false)
 
   const isAdmin = me?.role === 'super_admin' || me?.role === 'admin' || me?.role === 'moderator'
 
@@ -26,7 +28,7 @@ export function PortalSidebar() {
 
   return (
     <>
-      {/* Desktop / tablet sidebar */}
+      {/* ── Desktop / tablet sidebar ── */}
       <aside className={styles.sidebar} aria-label="Navigation principale">
         <div className={styles.top}>
           <div className={styles.logoWrap}>
@@ -59,13 +61,11 @@ export function PortalSidebar() {
         </div>
 
         <div className={styles.bottom}>
-          {/* Theme toggle */}
           <button className={styles.themeToggle} onClick={toggleTheme} aria-label="Toggle theme">
             <span className={styles.themeIcon}>{theme === 'dark' ? '☀' : '☾'}</span>
             <span className={styles.themeLabel}>{theme === 'dark' ? 'Light mode' : 'Dark mode'}</span>
           </button>
 
-          {/* Language toggle */}
           <button className={styles.langToggle} onClick={toggle} aria-label="Switch language">
             <span className={styles.langFlag}>{lang === 'fr' ? '🇫🇷' : '🇬🇧'}</span>
             <span className={styles.langLabel}>{lang === 'fr' ? 'Français' : 'English'}</span>
@@ -83,7 +83,6 @@ export function PortalSidebar() {
             {t.myAccount}
           </Link>
 
-          {/* Sign out */}
           <button
             className={`${styles.navItem} ${styles.signOutBtn}`}
             onClick={() => signOut({ redirectUrl: '/' })}
@@ -99,7 +98,76 @@ export function PortalSidebar() {
         </div>
       </aside>
 
-      {/* Mobile bottom nav */}
+      {/* ── Mobile: categories slide-up sheet ── */}
+      {sheetOpen && (
+        <>
+          <div
+            className={styles.sheetOverlay}
+            onClick={() => setSheetOpen(false)}
+            aria-hidden="true"
+          />
+          <div className={styles.sheet} role="dialog" aria-label="Catégories">
+            <div className={styles.sheetHandle} />
+            <div className={styles.sheetHeader}>
+              <span className={styles.sheetTitle}>
+                {lang === 'fr' ? 'Catégories' : 'Categories'}
+              </span>
+              <button className={styles.sheetClose} onClick={() => setSheetOpen(false)} aria-label="Fermer">✕</button>
+            </div>
+            <nav>
+              <ul role="list" className={styles.sheetList}>
+                <li>
+                  <Link
+                    href="/feed"
+                    className={`${styles.sheetItem} ${isActive('/feed') ? styles.sheetItemActive : ''}`}
+                    onClick={() => setSheetOpen(false)}
+                  >
+                    <span className={styles.sheetIcon}>✦</span>
+                    {t.dailyFeed}
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/alerts"
+                    className={`${styles.sheetItem} ${isActive('/alerts') ? styles.sheetItemActive : ''}`}
+                    onClick={() => setSheetOpen(false)}
+                  >
+                    <span className={styles.sheetIcon}>⚠</span>
+                    {t.scamAlerts}
+                  </Link>
+                </li>
+                {portals?.map((portal) => (
+                  <li key={portal._id}>
+                    <Link
+                      href={`/portal/${portal.slug}`}
+                      className={`${styles.sheetItem} ${isActive(`/portal/${portal.slug}`) ? styles.sheetItemActive : ''}`}
+                      onClick={() => setSheetOpen(false)}
+                    >
+                      <span className={styles.sheetIcon}>{portal.emoji}</span>
+                      {portal.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+            <div className={styles.sheetBottom}>
+              <button className={styles.sheetAction} onClick={toggleTheme}>
+                {theme === 'dark' ? '☀ Light mode' : '☾ Dark mode'}
+              </button>
+              <button className={styles.sheetAction} onClick={toggle}>
+                {lang === 'fr' ? '🇬🇧 English' : '🇫🇷 Français'}
+              </button>
+              {isAdmin && (
+                <Link href="/admin" className={styles.sheetAction} onClick={() => setSheetOpen(false)}>
+                  ⚙ Admin
+                </Link>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── Mobile bottom nav ── */}
       <nav className={styles.mobileNav} aria-label="Navigation mobile">
         <div className={styles.mobileNavInner}>
           <Link href="/feed" className={`${styles.mobileNavItem} ${isActive('/feed') ? styles.mobileActive : ''}`}>
@@ -110,20 +178,24 @@ export function PortalSidebar() {
             <span className={styles.mobileIcon}>⚠</span>
             Alertes
           </Link>
-          <Link href="/portal/hair" className={`${styles.mobileNavItem} ${pathname.startsWith('/portal') ? styles.mobileActive : ''}`}>
+          <button
+            className={`${styles.mobileNavItem} ${sheetOpen ? styles.mobileActive : ''} ${pathname.startsWith('/portal') ? styles.mobileActive : ''}`}
+            onClick={() => setSheetOpen(true)}
+            aria-label="Ouvrir les catégories"
+          >
             <span className={styles.mobileIcon}>🗂</span>
             {lang === 'fr' ? 'Catégories' : 'Categories'}
-          </Link>
+          </button>
           <Link href="/account" className={`${styles.mobileNavItem} ${isActive('/account') ? styles.mobileActive : ''}`}>
             <span className={styles.mobileIcon}>👤</span>
             Compte
           </Link>
           <button
-            className={`${styles.mobileNavItem}`}
+            className={styles.mobileNavItem}
             onClick={() => signOut({ redirectUrl: '/' })}
             aria-label={t.signOut}
           >
-            <span className={styles.mobileIcon}>→</span>
+            <span className={styles.mobileIcon}>⏻</span>
             {lang === 'fr' ? 'Sortir' : 'Out'}
           </button>
         </div>

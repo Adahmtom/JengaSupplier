@@ -1,3 +1,4 @@
+/* ── Desktop sidebar ── */
 .sidebar {
   background: #080808;
   border-right: 1px solid var(--color-border-subtle);
@@ -87,4 +88,121 @@
 .langDivider {
   font-size: 10px;
   color: var(--color-border);
+}
+
+/* ── Tablet ── */
+@media (max-width: 860px) {
+  .item { font-size: 13px; padding: 8px var(--space-3); }
+  .logoWrap { padding: 0 var(--space-3) var(--space-4); }
+  .bottom { padding: var(--space-3) var(--space-2); }
+}
+
+/* ── Mobile: hide sidebar ── */
+@media (max-width: 700px) {
+  .sidebar { display: none; }
+}
+
+/* ── Mobile top bar ── */
+.mobileTopBar {
+  display: none;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(8, 8, 8, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--color-border-subtle);
+  padding: 0 var(--space-4);
+  height: 52px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mobileTopLogo {
+  font-family: var(--font-sans);
+  font-size: 9px;
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--color-gold);
+  font-weight: 700;
+}
+
+@media (max-width: 700px) {
+  .mobileTopBar { display: flex; }
+}
+
+/* ── Mobile bottom nav ── */
+.mobileNav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: rgba(8, 8, 8, 0.96);
+  border-top: 1px solid var(--color-border-subtle);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 0 var(--space-1);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.mobileNavInner {
+  display: flex;
+  align-items: stretch;
+  height: 62px;
+}
+
+.mobileNavItem {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 9px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-text-subtle);
+  text-decoration: none;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  transition: color var(--duration-fast);
+  padding: var(--space-2) 0;
+  position: relative;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.mobileNavItem:hover { color: var(--color-text-muted); }
+
+.mobileActive {
+  color: var(--color-gold) !important;
+}
+
+.mobileActive::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 15%;
+  right: 15%;
+  height: 2px;
+  background: var(--color-gold);
+  border-radius: 0 0 2px 2px;
+}
+
+.mobileIcon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.mobileIconNew {
+  font-size: 22px;
+  line-height: 1;
+  color: var(--color-gold);
+}
+
+@media (max-width: 700px) {
+  .mobileNav { display: block; }
 }
