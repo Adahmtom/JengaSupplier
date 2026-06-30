@@ -1,0 +1,281 @@
+.page { max-width: 560px; }
+
+.title {
+  font-family: var(--font-serif);
+  font-size: var(--text-h1);
+  color: var(--color-text-primary);
+  letter-spacing: var(--tracking-tight);
+  font-weight: 700;
+  margin-bottom: var(--space-8);
+}
+
+/* ── Card ── */
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  margin-bottom: var(--space-4);
+  transition: border-color var(--duration-base);
+}
+.card:hover { border-color: var(--color-border); }
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-6);
+}
+
+.statusPill {
+  font-size: 11px;
+  color: var(--color-success);
+  background: var(--color-success-bg);
+  border: 1px solid rgba(78,201,122,0.28);
+  border-radius: var(--radius-full);
+  padding: 4px 12px;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+/* Profile */
+.profileRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  margin-bottom: var(--space-6);
+}
+
+.avatarWrap { flex-shrink: 0; }
+.profileInfo { flex: 1; min-width: 0; }
+
+.profileName {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 4px;
+  line-height: 1.2;
+}
+
+.profileEmail {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: var(--font-mono);
+}
+
+.roleBadge {
+  display: inline-block;
+  font-size: 11px;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  background: var(--color-gold-muted);
+  border: 1px solid var(--color-gold-muted-border);
+  color: var(--color-gold);
+  font-family: var(--font-sans);
+  font-weight: 700;
+}
+.roleAdmin {
+  background: var(--color-purple-muted);
+  border-color: var(--color-purple-muted-border);
+  color: var(--color-purple-light);
+}
+
+/* Fields */
+.fields {
+  border-top: 1px solid var(--color-border-subtle);
+  padding-top: var(--space-4);
+}
+
+.field {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-border-subtle);
+  gap: var(--space-4);
+}
+.field:last-child { border-bottom: none; }
+
+.fieldLabel {
+  font-size: 11px;
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  font-family: var(--font-sans);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.fieldValue {
+  font-size: 14px;
+  color: var(--color-text-primary);
+  text-align: right;
+  font-family: var(--font-mono);
+  font-weight: 500;
+}
+
+.textSuccess { color: var(--color-success); }
+.textAlert   { color: var(--color-alert-text); }
+
+/* Plan box */
+.planBox {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-5) var(--space-6);
+  background: linear-gradient(135deg, rgba(155,47,255,0.08) 0%, rgba(255,184,0,0.06) 100%);
+  border: 1px solid var(--color-purple-muted-border);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-5);
+}
+
+.planName {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 4px;
+}
+
+.planPrice {
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--color-gold);
+  font-family: var(--font-serif);
+  line-height: 1;
+}
+.planPrice span { font-size: 0.85rem; font-weight: 400; opacity: 0.7; font-family: var(--font-sans); }
+
+.statusDot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.dotActive   { background: var(--color-success); box-shadow: 0 0 12px var(--color-success); }
+.dotInactive { background: var(--color-text-muted); }
+
+.cancelWarning {
+  font-size: 14px;
+  color: var(--color-alert-text);
+  background: var(--color-alert-bg);
+  border: 1px solid var(--color-alert-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+  line-height: var(--leading-body);
+}
+
+.billingActions {
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.noSubWrap { text-align: center; padding: var(--space-4) 0; }
+.noSub { color: var(--color-text-secondary); font-size: 15px; }
+
+/* Access grid */
+.accessGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.accessItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  position: relative;
+  transition: border-color var(--duration-fast);
+}
+.accessItem:hover { border-color: var(--color-border); }
+
+.accessLocked { opacity: 0.4; }
+
+.accessIcon { font-size: 16px; flex-shrink: 0; }
+.accessLabel {
+  flex: 1;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.3;
+  font-family: var(--font-sans);
+  font-weight: 500;
+}
+.lockBadge { font-size: 12px; opacity: 0.6; }
+
+/* Help */
+.helpList { display: flex; flex-direction: column; }
+
+.helpItem {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--color-border-subtle);
+  text-decoration: none;
+  color: inherit;
+  transition: opacity var(--duration-fast);
+}
+.helpItem:last-child { border-bottom: none; }
+a.helpItem:hover { opacity: 0.75; }
+
+.helpIcon { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+
+.helpTitle {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 4px;
+  font-family: var(--font-sans);
+}
+
+.helpSub {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  line-height: var(--leading-body);
+}
+
+.helpArrow {
+  margin-left: auto;
+  color: var(--color-text-muted);
+  align-self: center;
+  flex-shrink: 0;
+  font-size: 16px;
+}
+
+/* Sign out button */
+.signOutBtn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3) var(--space-2);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-lg);
+  transition: all var(--duration-fast);
+}
+.signOutBtn:hover {
+  color: var(--color-alert-text);
+  background: var(--color-alert-bg);
+}
+
+/* ── Responsive ── */
+@media (max-width: 700px) {
+  .accessGrid { grid-template-columns: 1fr; }
+  .page { max-width: 100%; }
+  .planBox { padding: var(--space-4); }
+  .accessLabel { font-size: 12px; }
+}

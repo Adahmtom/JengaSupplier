@@ -1,0 +1,231 @@
+/* ── Brand palette constants ── */
+:root {
+  --brand-purple-vivid:  #9B2FFF;
+  --brand-purple-deep:   #6600CC;
+  --brand-purple-dark:   #2B0058;
+  --brand-gold:          #FFB800;
+  --brand-gold-light:    #FFD840;
+  --brand-gold-dark:     #CC9000;
+
+  /* ── Motion ── */
+  --duration-fast: 120ms;
+  --duration-base: 220ms;
+  --duration-slow: 380ms;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out:   cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring:   cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ── Typography ── */
+  --font-display: 'Cinzel', Georgia, 'Times New Roman', serif;
+  --font-serif:   'Cinzel', Georgia, 'Times New Roman', serif;
+  --font-sans:    'Barlow', system-ui, -apple-system, sans-serif;
+  --font-mono:    'SF Mono', 'Fira Code', monospace;
+
+  --text-display: clamp(2rem, 0.6rem + 4vw, 3.4rem);
+  --text-h1:      clamp(1.6rem, 0.8rem + 2.2vw, 2.4rem);
+  --text-h2:      clamp(1.15rem, 0.6rem + 1.2vw, 1.6rem);
+  --text-h3:      1.0625rem;
+  --text-body:    0.9375rem;
+  --text-sm:      0.8125rem;
+  --text-xs:      0.75rem;
+
+  --leading-tight: 1.1;
+  --leading-snug:  1.3;
+  --leading-body:  1.75;
+
+  --tracking-tight:   -0.02em;
+  --tracking-normal:  0;
+  --tracking-wide:    0.07em;
+  --tracking-wider:   0.13em;
+  --tracking-widest:  0.22em;
+
+  /* ── Spacing (8pt grid) ── */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  /* ── Radii ── */
+  --radius-sm:   3px;
+  --radius-md:   6px;
+  --radius-lg:   10px;
+  --radius-xl:   14px;
+  --radius-2xl:  22px;
+  --radius-full: 9999px;
+
+  /* ── Layout ── */
+  --sidebar-width: 252px;
+  --nav-height:    60px;
+  --content-max:   1320px;
+  --content-width: 700px;
+}
+
+/* ════════════════════════════════════════
+   DARK MODE  (default — true black base)
+════════════════════════════════════════ */
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Surfaces — true black base */
+  --color-bg:        #000000;
+  --color-base:      #000000;
+  --color-surface:   #0D0D0D;
+  --color-surface-2: #141414;
+  --color-surface-3: #1C1C1C;
+  --color-surface-4: #242424;
+
+  /* Borders — subtle neutral with purple tint */
+  --color-border-subtle: rgba(155, 47, 255, 0.12);
+  --color-border:        rgba(155, 47, 255, 0.22);
+  --color-border-hover:  rgba(155, 47, 255, 0.40);
+
+  /* Gold */
+  --color-gold:              #FFB800;
+  --color-gold-light:        #FFD840;
+  --color-gold-dim:          #CC9000;
+  --color-gold-muted:        rgba(255, 184, 0, 0.09);
+  --color-gold-muted-border: rgba(255, 184, 0, 0.24);
+  --color-gold-glow:         rgba(255, 184, 0, 0.22);
+
+  /* Purple */
+  --color-purple:              #9B2FFF;
+  --color-purple-light:        #C070FF;
+  --color-purple-dim:          #6600CC;
+  --color-purple-muted:        rgba(155, 47, 255, 0.10);
+  --color-purple-muted-border: rgba(155, 47, 255, 0.26);
+
+  /* Text */
+  --color-text:              #F0E8FF;
+  --color-text-primary:      #F0E8FF;
+  --color-text-secondary:    #D0B8F0;
+  --color-text-muted:        #B090D8;
+  --color-text-subtle:       #8A6EBB;
+  --color-text-placeholder:  #5A3E80;
+
+  /* Stat numbers — vivid against dark surfaces */
+  --color-stat-value: #FFD840;
+
+  /* Semantic */
+  --color-alert:        #e05565;
+  --color-alert-bg:     rgba(224, 85, 101, 0.09);
+  --color-alert-border: rgba(224, 85, 101, 0.24);
+  --color-alert-text:   #f07885;
+  --color-success:      #4ec97a;
+  --color-success-bg:   rgba(78, 201, 122, 0.09);
+  --color-info:         #7aadff;
+
+  /* Shadows */
+  --shadow-sm:       0 1px 2px rgba(0,0,0,0.9);
+  --shadow-card:     0 2px 16px rgba(0,0,0,0.8), 0 1px 4px rgba(0,0,0,0.6);
+  --shadow-elevated: 0 16px 48px rgba(0,0,0,0.9), 0 4px 16px rgba(0,0,0,0.7);
+  --shadow-gold:     0 0 32px rgba(255,184,0,0.20);
+  --shadow-purple:   0 0 32px rgba(155,47,255,0.24);
+}
+
+/* ════════════════════════════════════════
+   LIGHT MODE — explicit toggle
+════════════════════════════════════════ */
+[data-theme="light"] {
+  color-scheme: light;
+
+  --color-bg:        #FAF8FF;
+  --color-base:      #FAF8FF;
+  --color-surface:   #FFFFFF;
+  --color-surface-2: #F3EEFF;
+  --color-surface-3: #EBE3FA;
+  --color-surface-4: #E0D5F5;
+  --color-border-subtle: rgba(102, 0, 204, 0.08);
+  --color-border:        rgba(102, 0, 204, 0.16);
+  --color-border-hover:  rgba(102, 0, 204, 0.30);
+  --color-gold:              #CC8800;
+  --color-gold-light:        #E09900;
+  --color-gold-dim:          #996600;
+  --color-gold-muted:        rgba(204, 136, 0, 0.08);
+  --color-gold-muted-border: rgba(204, 136, 0, 0.22);
+  --color-gold-glow:         rgba(204, 136, 0, 0.14);
+  --color-purple:              #7700CC;
+  --color-purple-light:        #9B2FFF;
+  --color-purple-dim:          #5500AA;
+  --color-purple-muted:        rgba(119, 0, 204, 0.07);
+  --color-purple-muted-border: rgba(119, 0, 204, 0.20);
+  --color-text:              #1A0033;
+  --color-text-primary:      #1A0033;
+  --color-text-secondary:    #4A1080;
+  --color-text-muted:        #6A40A0;
+  --color-text-subtle:       #9B80C0;
+  --color-text-placeholder:  #BBA8D8;
+
+  /* Stat numbers — vivid against light surfaces */
+  --color-stat-value: #5500AA;
+
+  --color-alert:        #c0303f;
+  --color-alert-bg:     rgba(192, 48, 63, 0.07);
+  --color-alert-border: rgba(192, 48, 63, 0.18);
+  --color-alert-text:   #a02030;
+  --color-success:      #1e8a44;
+  --color-success-bg:   rgba(30, 138, 68, 0.07);
+  --color-info:         #2060bb;
+  --shadow-sm:       0 1px 3px rgba(26,0,51,0.10);
+  --shadow-card:     0 2px 12px rgba(26,0,51,0.08), 0 1px 3px rgba(26,0,51,0.06);
+  --shadow-elevated: 0 12px 40px rgba(26,0,51,0.14), 0 4px 12px rgba(26,0,51,0.08);
+  --shadow-gold:     0 0 24px rgba(204,136,0,0.12);
+  --shadow-purple:   0 0 24px rgba(119,0,204,0.12);
+}
+
+/* ════════════════════════════════════════
+   LIGHT MODE — OS preference fallback
+   (only applies when no explicit data-theme is set)
+════════════════════════════════════════ */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]):not([data-theme="light"]) {
+    color-scheme: light;
+    --color-bg:        #FAF8FF;
+    --color-base:      #FAF8FF;
+    --color-surface:   #FFFFFF;
+    --color-surface-2: #F3EEFF;
+    --color-surface-3: #EBE3FA;
+    --color-surface-4: #E0D5F5;
+    --color-border-subtle: rgba(102, 0, 204, 0.08);
+    --color-border:        rgba(102, 0, 204, 0.16);
+    --color-border-hover:  rgba(102, 0, 204, 0.30);
+    --color-gold:              #CC8800;
+    --color-gold-light:        #E09900;
+    --color-gold-dim:          #996600;
+    --color-gold-muted:        rgba(204, 136, 0, 0.08);
+    --color-gold-muted-border: rgba(204, 136, 0, 0.22);
+    --color-gold-glow:         rgba(204, 136, 0, 0.14);
+    --color-purple:              #7700CC;
+    --color-purple-light:        #9B2FFF;
+    --color-purple-dim:          #5500AA;
+    --color-purple-muted:        rgba(119, 0, 204, 0.07);
+    --color-purple-muted-border: rgba(119, 0, 204, 0.20);
+    --color-text:              #1A0033;
+    --color-text-primary:      #1A0033;
+    --color-text-secondary:    #4A1080;
+    --color-text-muted:        #6A40A0;
+    --color-text-subtle:       #9B80C0;
+    --color-text-placeholder:  #BBA8D8;
+    --color-stat-value: #5500AA;
+    --color-alert:        #c0303f;
+    --color-alert-bg:     rgba(192, 48, 63, 0.07);
+    --color-alert-border: rgba(192, 48, 63, 0.18);
+    --color-alert-text:   #a02030;
+    --color-success:      #1e8a44;
+    --color-success-bg:   rgba(30, 138, 68, 0.07);
+    --color-info:         #2060bb;
+    --shadow-sm:       0 1px 3px rgba(26,0,51,0.10);
+    --shadow-card:     0 2px 12px rgba(26,0,51,0.08), 0 1px 3px rgba(26,0,51,0.06);
+    --shadow-elevated: 0 12px 40px rgba(26,0,51,0.14), 0 4px 12px rgba(26,0,51,0.08);
+    --shadow-gold:     0 0 24px rgba(204,136,0,0.12);
+    --shadow-purple:   0 0 24px rgba(119,0,204,0.12);
+  }
+}

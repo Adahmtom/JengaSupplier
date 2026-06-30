@@ -1,0 +1,51 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-8);
+}
+
+.filter {
+  width: 180px;
+  font-size: 13px;
+}
+
+.code {
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  background: var(--color-border-subtle);
+  padding: 2px 5px;
+  border-radius: var(--radius-sm);
+  color: var(--color-purple);
+}
+
+.target {
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.critical {
+  color: var(--color-alert-text);
+  font-weight: 600;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+}
+
+.warning {
+  color: var(--color-gold);
+  font-weight: 600;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+}
+
+.info {
+  color: var(--color-text-subtle);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+}

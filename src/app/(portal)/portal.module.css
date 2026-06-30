@@ -1,0 +1,43 @@
+.layout {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) 1fr;
+  min-height: 100dvh;
+}
+
+.main {
+  background: var(--color-bg);
+  min-height: 100dvh;
+  /* On large screens, content stays readable with generous padding */
+  padding: var(--space-10) clamp(var(--space-6), 4vw, var(--space-14));
+}
+
+/* ── Large desktop (≥1440px): extra breathing room ── */
+@media (min-width: 1440px) {
+  .main { padding: var(--space-12) clamp(var(--space-10), 5vw, var(--space-20)); }
+}
+
+/* ── Tablet landscape (≤1100px): narrow sidebar ── */
+@media (max-width: 1100px) {
+  .layout { grid-template-columns: 200px 1fr; }
+  .main { padding: var(--space-8) var(--space-8); }
+}
+
+/* ── Tablet portrait (≤860px): even narrower ── */
+@media (max-width: 860px) {
+  .layout { grid-template-columns: 180px 1fr; }
+  .main { padding: var(--space-6) var(--space-6); }
+}
+
+/* ── Mobile (≤700px): sidebar disappears, bottom nav takes over ── */
+@media (max-width: 700px) {
+  .layout {
+    grid-template-columns: 1fr;
+    padding-bottom: 64px;
+  }
+  .main { padding: var(--space-5) var(--space-4); }
+}
+
+/* ── Very small mobile ── */
+@media (max-width: 360px) {
+  .main { padding: var(--space-4) var(--space-3); }
+}

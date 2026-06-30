@@ -1,0 +1,218 @@
+.section {
+  padding: clamp(var(--space-16), 8vw, var(--space-24)) 0;
+}
+
+.header {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 0 clamp(var(--space-4), 5vw, var(--space-10));
+  text-align: center;
+  margin-bottom: var(--space-10);
+}
+
+.sectionTitle {
+  font-family: var(--font-serif);
+  font-size: var(--text-h1);
+  color: var(--color-text-primary);
+  letter-spacing: var(--tracking-tight);
+  margin-top: var(--space-3);
+}
+
+/* ── Two-card grid ── */
+.grid {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 clamp(var(--space-4), 5vw, var(--space-10));
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+@media (max-width: 680px) {
+  .grid { grid-template-columns: 1fr; }
+}
+
+/* ── Card base ── */
+.card {
+  background: var(--color-surface);
+  border: 1px solid rgba(201,168,76,0.12);
+  border-radius: var(--radius-2xl);
+  padding: clamp(var(--space-6), 4vw, var(--space-10));
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  transition: transform var(--duration-base) var(--ease-out-expo);
+}
+
+.card:hover { transform: translateY(-2px); }
+
+/* ── Featured (yearly) card ── */
+.cardFeatured {
+  border-color: var(--color-gold);
+  border-width: 1.5px;
+  background: linear-gradient(160deg, var(--color-surface) 60%, rgba(255,184,0,0.04) 100%);
+  box-shadow: var(--shadow-gold);
+}
+
+.goldLine {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg,
+    var(--color-gold-dim),
+    var(--color-gold),
+    var(--color-gold-light),
+    var(--color-gold),
+    var(--color-gold-dim));
+}
+
+/* ── Best badge ── */
+.bestBadge {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--color-gold-dim), var(--color-gold));
+  color: #000;
+  font-family: var(--font-sans);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  margin-bottom: var(--space-3);
+}
+
+/* ── Plan label ── */
+.planLabel {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--color-text-subtle);
+  margin-bottom: var(--space-4);
+}
+
+/* ── Price ── */
+.priceRow {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2px;
+  line-height: 1;
+  margin-bottom: var(--space-1);
+}
+
+.currency {
+  font-family: var(--font-serif);
+  font-size: 1.4rem;
+  color: var(--color-gold);
+  align-self: flex-start;
+  margin-top: 6px;
+}
+
+.priceNum {
+  font-family: var(--font-serif);
+  font-size: clamp(2.8rem, 5vw, 3.8rem);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: var(--tracking-tight);
+}
+
+.pricePer {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--color-text-subtle);
+  margin-bottom: 6px;
+}
+
+/* ── Original price + savings ── */
+.originalPrice {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--color-text-subtle);
+  margin-bottom: var(--space-1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 1.4rem;
+}
+
+.saveTag {
+  background: rgba(155,47,255,0.12);
+  color: var(--color-purple-light);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  letter-spacing: var(--tracking-wide);
+}
+
+.period {
+  font-size: 11px;
+  color: var(--color-text-subtle);
+  margin-bottom: var(--space-6);
+  letter-spacing: var(--tracking-wide);
+}
+
+/* ── Perks list ── */
+.perks {
+  list-style: none;
+  text-align: left;
+  margin-bottom: var(--space-6);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.perk {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-border-subtle);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.perkIcon {
+  color: var(--color-gold);
+  font-size: 8px;
+  flex-shrink: 0;
+}
+
+/* ── Buttons ── */
+.joinBtn {
+  width: 100%;
+  justify-content: center;
+  margin-bottom: var(--space-3);
+  padding: 14px 24px;
+}
+
+.joinBtnSecondary {
+  width: 100%;
+  justify-content: center;
+  margin-bottom: var(--space-3);
+  padding: 14px 24px;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-lg);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  transition: border-color var(--duration-fast), color var(--duration-fast);
+}
+
+.joinBtnSecondary:hover {
+  border-color: var(--color-gold);
+  color: var(--color-gold);
+}
+
+.note {
+  font-size: 10px;
+  color: var(--color-text-subtle);
+  letter-spacing: var(--tracking-wide);
+}

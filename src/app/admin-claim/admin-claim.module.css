@@ -1,0 +1,92 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-5);
+  padding: var(--space-10) var(--space-12);
+  background: #0D0D0D;
+  border: 1px solid rgba(155,47,255,0.2);
+  border-radius: var(--radius-xl);
+  min-width: 320px;
+  text-align: center;
+}
+
+.brandMark {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #9B2FFF, #FFB800);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: var(--space-2);
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(155,47,255,0.2);
+  border-top-color: #9B2FFF;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.successIcon {
+  width: 40px;
+  height: 40px;
+  background: rgba(72,199,116,0.15);
+  border: 2px solid #48C774;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: #48C774;
+  font-weight: 700;
+}
+
+.errorIcon {
+  width: 40px;
+  height: 40px;
+  background: rgba(224,85,101,0.15);
+  border: 2px solid #E05565;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: #E05565;
+  font-weight: 700;
+}
+
+.msg {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: rgba(255,255,255,0.6);
+  letter-spacing: 0.01em;
+}
+
+.msgError {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: #E05565;
+}
+
+.retry {
+  font-size: 13px;
+  margin-top: var(--space-2);
+}

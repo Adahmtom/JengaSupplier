@@ -1,0 +1,90 @@
+.sidebar {
+  background: #080808;
+  border-right: 1px solid var(--color-border-subtle);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: var(--space-6) 0;
+}
+
+.logoWrap {
+  padding: 0 var(--space-4) var(--space-6);
+  border-bottom: 1px solid var(--color-border-subtle);
+  margin-bottom: var(--space-4);
+}
+
+.logo {
+  font-family: var(--font-sans);
+  font-size: 9px;
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--color-gold);
+  font-weight: 700;
+}
+
+.list { list-style: none; }
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 8px var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--color-text-subtle);
+  text-decoration: none;
+  transition: all var(--duration-fast) var(--ease-out-expo);
+  font-family: var(--font-sans);
+}
+.item:hover { color: var(--color-text-muted); background: var(--color-surface); }
+
+.active {
+  color: var(--color-gold) !important;
+  background: rgba(201, 168, 76, 0.06) !important;
+  border-right: 2px solid var(--color-gold);
+}
+
+.bottom {
+  padding: var(--space-4);
+  border-top: 1px solid var(--color-border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.user { padding: var(--space-2) 0; }
+
+.langToggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-full);
+  padding: 5px 12px;
+  cursor: pointer;
+  width: fit-content;
+  transition: border-color var(--duration-fast);
+}
+.langToggle:hover { border-color: var(--color-gold); }
+
+.langActive {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: var(--tracking-wider);
+  color: var(--color-gold);
+}
+
+.langInactive {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: var(--tracking-wider);
+  color: var(--color-text-subtle);
+}
+
+.langDivider {
+  font-size: 10px;
+  color: var(--color-border);
+}
