@@ -192,24 +192,21 @@
   justify-content: center;
   margin-bottom: var(--space-3);
   padding: 14px 24px;
-  background: transparent;
-  border: 1px solid var(--color-border);
-  color: var(--color-text-secondary);
+  background: var(--color-gold);
+  border: none;
+  color: #000;
   border-radius: var(--radius-lg);
   font-family: var(--font-sans);
   font-size: var(--text-sm);
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: var(--tracking-wide);
   text-decoration: none;
   display: flex;
   align-items: center;
-  transition: border-color var(--duration-fast), color var(--duration-fast);
+  transition: opacity var(--duration-fast);
 }
 
-.joinBtnSecondary:hover {
-  border-color: var(--color-gold);
-  color: var(--color-gold);
-}
+.joinBtnSecondary:hover { opacity: 0.88; }
 
 .note {
   font-size: 10px;
