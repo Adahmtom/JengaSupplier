@@ -28,8 +28,8 @@ const FEATURES = [
   },
   {
     num: '06',
-    title: 'Sessions en direct',
-    desc: 'Sessions en direct chaque mois avec Belle Jones — Q&A, nouveaux marchés, opportunités exclusives.',
+    title: 'Communauté Jenga',
+    desc: 'Rejoignez la communauté Jenga pour échanger avec les autres membres, partager vos trouvailles et progresser ensemble.',
   },
 ]
 

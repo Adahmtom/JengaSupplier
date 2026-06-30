@@ -13,7 +13,7 @@ const PERKS = [
   'Calculateur de coûts & check-lists',
   'Alertes arnaques de la communauté',
   'Transitaires recommandés',
-  'Sessions en direct chaque mois avec Belle Jones',
+  'COMMUNAUTÉ JENGA pour échanger avec les autres membres',
   'Résiliez à tout moment — sans engagement',
 ]
 
