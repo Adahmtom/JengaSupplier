@@ -13,7 +13,7 @@ const PERKS = [
   'Calculateur de coûts & check-lists',
   'Alertes arnaques de la communauté',
   'Transitaires recommandés',
-  'Lives mensuels avec Belle Jones',
+  'Sessions en direct chaque mois avec Belle Jones',
   'Résiliez à tout moment — sans engagement',
 ]
 
@@ -58,7 +58,7 @@ export function Pricing() {
           </ul>
 
           <Link href={`${base}?plan=monthly`} onClick={() => savePlan('monthly')} className={`btn ${styles.joinBtnSecondary}`}>
-            Commencer — $29/mois
+            Deviens Membre
           </Link>
           <p className={styles.note}>Accès instantané · Aucun frais caché</p>
         </div>

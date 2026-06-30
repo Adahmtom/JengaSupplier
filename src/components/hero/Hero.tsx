@@ -9,7 +9,7 @@ export function Hero() {
   return (
     <section className={styles.hero} aria-labelledby="hero-heading">
       <div className={styles.content}>
-        <p className={`label ${styles.eyebrow}`}>✦ China Business Vault by Belle Jones</p>
+        <p className={`label ${styles.eyebrow}`}>✦ Bienvenue dans le Jenga Supplier Vault</p>
 
         <h1 id="hero-heading" className={styles.headline}>
           La plus grande bibliothèque{' '}
@@ -26,7 +26,7 @@ export function Hero() {
 
         <div className={styles.cta}>
           <a href="#pricing" className="btn btn-primary">
-            Commencer maintenant — $29/mois
+            Rejoins Jenga Maintenant
           </a>
           <a href="#pricing" className={styles.ctaLink}>
             $299/an · économisez $49 →
@@ -42,7 +42,7 @@ export function Hero() {
             ))}
           </div>
           <p className={styles.socialText}>
-            Rejoints par <strong>500+ membres</strong> ce mois-ci
+            Déjà plus de <strong>150+ membres</strong>
           </p>
         </div>
       </div>

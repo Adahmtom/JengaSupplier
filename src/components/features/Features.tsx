@@ -28,7 +28,7 @@ const FEATURES = [
   },
   {
     num: '06',
-    title: 'Lives mensuels',
+    title: 'Sessions en direct',
     desc: 'Sessions en direct chaque mois avec Belle Jones — Q&A, nouveaux marchés, opportunités exclusives.',
   },
 ]
