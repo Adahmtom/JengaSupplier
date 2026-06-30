@@ -18,18 +18,18 @@ const FEATURES = [
   },
   {
     num: '04',
-    title: 'Alertes Arnaques',
-    desc: 'Protégez votre business — notre communauté signale les mauvais acteurs avant qu\'ils ne vous coûtent de l\'argent.',
+    title: 'Éviter les arnaques',
+    desc: 'Apprenez à identifier les fournisseurs fiables, éviter les pièges les plus fréquents et importer en toute sécurité grâce à nos conseils et méthodes.',
   },
   {
     num: '05',
     title: 'Vidéos d\'usines',
-    desc: 'Vidéos tournées directement dans les usines chinoises pour voir la qualité avant d\'acheter.',
+    desc: 'Découvrez des vidéos tournées directement dans les usines de nos différents fournisseurs afin d\'évaluer leur qualité, leur sérieux et leurs méthodes de production avant de commander.',
   },
   {
     num: '06',
     title: 'Communauté Jenga',
-    desc: 'Rejoignez la communauté Jenga pour échanger avec les autres membres, partager vos trouvailles et progresser ensemble.',
+    desc: 'Échangez avec les autres membres, partagez vos expériences, posez vos questions, publiez les photos de vos commandes et bénéficiez des retours de la communauté.',
   },
 ]
 
