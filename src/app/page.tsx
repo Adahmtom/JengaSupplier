@@ -37,7 +37,7 @@ export default function LandingPage() {
         <section style={{ padding: 'var(--space-24) var(--space-8)', maxWidth: 'var(--content-max)', margin: '0 auto' }}>
           <p className="label" style={{ textAlign: 'center', marginBottom: 'var(--space-4)' }}>✦ Services Exclusifs</p>
           <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(1.6rem, 3.5vw, 2.4rem)', fontWeight: 700, color: 'var(--color-text)', textAlign: 'center', marginBottom: 'var(--space-12)' }}>
-            Aller plus loin avec Belle
+            Aller plus loin avec l&apos;équipe Jenga
           </h2>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 'var(--space-6)' }}>
@@ -46,10 +46,13 @@ export default function LandingPage() {
             <div style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border-subtle)', borderRadius: 'var(--radius-xl)', padding: 'var(--space-8)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
               <span style={{ fontSize: '2rem' }}>✈️</span>
               <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.4rem', fontWeight: 700, color: 'var(--color-text)' }}>
-                Voyage en Chine avec Belle
+                Voyage en Chine avec Belle &amp; l&apos;équipe Jenga
               </h3>
               <p style={{ color: 'var(--color-text-muted)', fontSize: '0.95rem', lineHeight: 1.6 }}>
-                Accompagnez Belle directement en Chine — visitez des usines, rencontrez des fournisseurs et sourcez vos produits sur place.
+                Rejoignez Belle Jones et l&apos;équipe Jenga pour une immersion unique en Chine. Visitez des usines, rencontrez des fournisseurs vérifiés, sourcez des produits rentables et apprenez à acheter directement à la source pour lancer ou développer votre business.
+              </p>
+              <p style={{ color: 'var(--color-gold)', fontSize: '0.85rem', fontStyle: 'italic', lineHeight: 1.5 }}>
+                Le succès appartient à ceux qui passent à l&apos;action. Votre prochain chapitre commence aujourd&apos;hui.
               </p>
               <p style={{ fontFamily: 'var(--font-serif)', fontSize: '2rem', fontWeight: 700, color: 'var(--color-gold)' }}>$3 500</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', marginTop: 'auto' }}>
@@ -77,7 +80,10 @@ export default function LandingPage() {
                 Sourcing de produits en Chine pour vous
               </h3>
               <p style={{ color: 'var(--color-text-muted)', fontSize: '0.95rem', lineHeight: 1.6 }}>
-                Belle et son équipe sourcent vos produits directement en Chine — fournisseurs vérifiés, négociation, contrôle qualité inclus.
+                Confiez votre sourcing à Belle et à l&apos;équipe Jenga. Nous trouvons des fournisseurs vérifiés, négocions les meilleurs prix, contrôlons la qualité et gérons vos commandes directement pour vous. Vous gagnez du temps, réduisez les risques et achetez en toute confiance.
+              </p>
+              <p style={{ color: 'var(--color-gold)', fontSize: '0.85rem', fontStyle: 'italic', lineHeight: 1.5 }}>
+                Votre business mérite les meilleurs fournisseurs. Nous les trouvons pour vous.
               </p>
               <p style={{ fontFamily: 'var(--font-serif)', fontSize: '2rem', fontWeight: 700, color: 'var(--color-gold)' }}>$1 200</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', marginTop: 'auto' }}>
