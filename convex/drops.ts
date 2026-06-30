@@ -127,6 +127,50 @@ export const createDrop = mutation({
   },
 })
 
+export const bulkCreateDrops = mutation({
+  args: {
+    portalId: v.id('portals'),
+    rows: v.array(v.object({
+      title: v.string(),
+      body: v.string(),
+      phone: v.optional(v.string()),
+      email: v.optional(v.string()),
+      isVerified: v.optional(v.boolean()),
+    })),
+  },
+  handler: async (ctx, { portalId, rows }) => {
+    const actor = await requirePermission(ctx, 'drops', 'create')
+    const ids: string[] = []
+    for (const row of rows) {
+      const id = await ctx.db.insert('drops', {
+        portalId,
+        title: row.title,
+        body: row.body,
+        phone: row.phone,
+        email: row.email,
+        authorId: actor._id,
+        isPinned: false,
+        isAlert: false,
+        isVerified: row.isVerified ?? false,
+        isPublished: true,
+      })
+      ids.push(id)
+    }
+    await ctx.runMutation(internal.audit.write, {
+      actorId: actor._id,
+      actorEmail: actor.email,
+      actorRole: actor.role,
+      action: 'drops.bulk_create',
+      resource: 'drops',
+      targetId: ids[0] ?? '',
+      targetLabel: `Bulk import: ${ids.length} vendors`,
+      outcome: 'success',
+      severity: 'info',
+    })
+    return ids
+  },
+})
+
 export const updateDrop = mutation({
   args: {
     dropId: v.id('drops'),
