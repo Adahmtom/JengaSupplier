@@ -1,15 +1,15 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useMutation } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import styles from './admin-claim.module.css'
 
 const MAX_RETRIES = 8
-const RETRY_DELAY = 1500 // ms between retries
+const RETRY_DELAY = 1500
 
-export default function AdminClaimPage() {
+function AdminClaimInner() {
   const router = useRouter()
   const params = useSearchParams()
   const claimSuperAdmin = useMutation(api.admin.claimSuperAdmin)
@@ -22,7 +22,7 @@ export default function AdminClaimPage() {
     let cancelled = false
     let attempt = 0
 
-    async function tryClam() {
+    async function tryClaim() {
       if (cancelled) return
       attempt++
       try {
@@ -33,9 +33,8 @@ export default function AdminClaimPage() {
         }
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Something went wrong'
-        // Retry on auth errors — JWT may not be hydrated yet
         if (!cancelled && attempt < MAX_RETRIES && msg.toLowerCase().includes('not authenticated')) {
-          setTimeout(tryClam, RETRY_DELAY)
+          setTimeout(tryClaim, RETRY_DELAY)
         } else if (!cancelled) {
           setStatus('error')
           setErrorMsg(msg)
@@ -43,8 +42,7 @@ export default function AdminClaimPage() {
       }
     }
 
-    // Initial delay to allow Convex JWT to hydrate after Clerk redirect
-    const t = setTimeout(tryClam, 2000)
+    const t = setTimeout(tryClaim, 2000)
     return () => { cancelled = true; clearTimeout(t) }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -78,5 +76,13 @@ export default function AdminClaimPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function AdminClaimPage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: '100vh', background: '#000' }} />}>
+      <AdminClaimInner />
+    </Suspense>
   )
 }

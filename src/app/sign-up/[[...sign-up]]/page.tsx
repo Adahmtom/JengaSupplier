@@ -1,9 +1,10 @@
 'use client'
 
+import { Suspense } from 'react'
 import { SignUp } from '@clerk/nextjs'
 import { useSearchParams } from 'next/navigation'
 
-export default function SignUpPage() {
+function SignUpInner() {
   const params = useSearchParams()
   const plan = params.get('plan') === 'yearly' ? 'yearly' : 'monthly'
 
@@ -24,5 +25,13 @@ export default function SignUpPage() {
         <SignUp forceRedirectUrl={`/checkout?plan=${plan}`} />
       </div>
     </div>
+  )
+}
+
+export default function SignUpPage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: '100vh', background: 'var(--color-surface)' }} />}>
+      <SignUpInner />
+    </Suspense>
   )
 }

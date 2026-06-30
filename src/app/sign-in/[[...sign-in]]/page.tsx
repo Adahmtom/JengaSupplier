@@ -1,9 +1,10 @@
 'use client'
 
+import { Suspense } from 'react'
 import { SignIn } from '@clerk/nextjs'
 import { useSearchParams } from 'next/navigation'
 
-export default function SignInPage() {
+function SignInInner() {
   const params = useSearchParams()
   const plan = params.get('plan')
   const redirectUrl = plan ? `/checkout?plan=${plan}` : '/redirect'
@@ -28,5 +29,13 @@ export default function SignInPage() {
         />
       </div>
     </div>
+  )
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: '100vh', background: 'var(--color-surface)' }} />}>
+      <SignInInner />
+    </Suspense>
   )
 }

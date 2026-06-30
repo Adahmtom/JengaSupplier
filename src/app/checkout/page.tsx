@@ -1,12 +1,12 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useAction, useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import styles from './checkout.module.css'
 
-export default function CheckoutPage() {
+function CheckoutInner() {
   const createCheckout = useAction(api.stripe.createCheckoutSession)
   const params = useSearchParams()
   const me = useQuery(api.users.getMe)
@@ -14,7 +14,6 @@ export default function CheckoutPage() {
   const [status, setStatus] = useState<'waiting' | 'redirecting'>('waiting')
 
   useEffect(() => {
-    // Wait until the Convex user record exists (webhook may not have fired yet)
     if (me === undefined || me === null) return
     if (called.current) return
     called.current = true
@@ -53,5 +52,13 @@ export default function CheckoutPage() {
         </p>
       </div>
     </div>
+  )
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: '100vh', background: '#000' }} />}>
+      <CheckoutInner />
+    </Suspense>
   )
 }
