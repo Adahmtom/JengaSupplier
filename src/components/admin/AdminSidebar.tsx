@@ -13,6 +13,7 @@ const NAV = [
   { href: '/admin/categories', icon: '🗂', label: 'Categories' },
   { href: '/admin/members', icon: '👥', label: 'Members' },
   { href: '/admin/audit', icon: '📋', label: 'Audit Log' },
+  { href: '/admin/waitlist', icon: '📝', label: 'Waitlist' },
 ]
 
 export function AdminSidebar() {

@@ -100,6 +100,15 @@ export default defineSchema({
     body: v.string(),
   }).index('by_drop', ['dropId']),
 
+  waitlist: defineTable({
+    name: v.string(),
+    email: v.string(),
+    phone: v.string(),
+    service: v.string(), // 'travel-sep-2026' | 'travel-apr-2027' | 'sourcing-sep-2026' | 'sourcing-apr-2027'
+  })
+    .index('by_email', ['email'])
+    .index('by_service', ['service']),
+
   // ── Audit log (SOC2) ───────────────────────────────────────────────────────
   // Immutable by design — no public update or delete mutations exist.
   // Written only via internal.audit.write (server-side only, client-inaccessible).

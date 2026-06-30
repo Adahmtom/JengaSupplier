@@ -1,9 +1,21 @@
+'use client'
+
+import { useState } from 'react'
 import { Nav } from '@/components/nav/Nav'
 import { Hero } from '@/components/hero/Hero'
 import { Features } from '@/components/features/Features'
 import { Pricing } from '@/components/pricing/Pricing'
+import { WaitlistModal } from '@/components/waitlist/WaitlistModal'
+
+interface WaitlistEntry {
+  service: string
+  serviceLabel: string
+  date: string
+}
 
 export default function LandingPage() {
+  const [waitlist, setWaitlist] = useState<WaitlistEntry | null>(null)
+
   return (
     <>
       <Nav />
@@ -25,7 +37,7 @@ export default function LandingPage() {
         <section style={{ padding: 'var(--space-24) var(--space-8)', maxWidth: 'var(--content-max)', margin: '0 auto' }}>
           <p className="label" style={{ textAlign: 'center', marginBottom: 'var(--space-4)' }}>✦ Services Exclusifs</p>
           <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(1.6rem, 3.5vw, 2.4rem)', fontWeight: 700, color: 'var(--color-text)', textAlign: 'center', marginBottom: 'var(--space-12)' }}>
-            Aller plus loin avec Belle Jones
+            Aller plus loin avec Belle
           </h2>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 'var(--space-6)' }}>
@@ -37,24 +49,24 @@ export default function LandingPage() {
                 Voyage en Chine avec Belle
               </h3>
               <p style={{ color: 'var(--color-text-muted)', fontSize: '0.95rem', lineHeight: 1.6 }}>
-                Accompagnez Belle Jones directement en Chine — visitez des usines, rencontrez des fournisseurs et sourcez vos produits sur place.
+                Accompagnez Belle directement en Chine — visitez des usines, rencontrez des fournisseurs et sourcez vos produits sur place.
               </p>
-              <p style={{ fontFamily: 'var(--font-serif)', fontSize: '2rem', fontWeight: 700, color: 'var(--color-gold)' }}>
-                $3 500
-              </p>
+              <p style={{ fontFamily: 'var(--font-serif)', fontSize: '2rem', fontWeight: 700, color: 'var(--color-gold)' }}>$3 500</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', marginTop: 'auto' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 'var(--space-3) var(--space-4)', background: 'var(--color-surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border-subtle)' }}>
-                  <span style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>📅 Septembre 2026</span>
-                  <a href="mailto:belle@jengasuppliers.com?subject=Voyage Chine - Septembre 2026" style={{ fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-gold)', textDecoration: 'none', fontWeight: 700 }}>
-                    S&apos;inscrire →
-                  </a>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 'var(--space-3) var(--space-4)', background: 'var(--color-surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border-subtle)' }}>
-                  <span style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>📅 Avril 2027</span>
-                  <a href="mailto:belle@jengasuppliers.com?subject=Voyage Chine - Avril 2027" style={{ fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-gold)', textDecoration: 'none', fontWeight: 700 }}>
-                    S&apos;inscrire →
-                  </a>
-                </div>
+                {[
+                  { label: 'Septembre 2026', service: 'travel-sep-2026' },
+                  { label: 'Avril 2027',     service: 'travel-apr-2027' },
+                ].map(({ label, service }) => (
+                  <div key={service} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 'var(--space-3) var(--space-4)', background: 'var(--color-surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border-subtle)' }}>
+                    <span style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>📅 {label}</span>
+                    <button
+                      onClick={() => setWaitlist({ service, serviceLabel: 'Voyage en Chine avec Belle', date: label })}
+                      style={{ fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-gold)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700, padding: 0 }}
+                    >
+                      Rejoindre la liste →
+                    </button>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -67,22 +79,22 @@ export default function LandingPage() {
               <p style={{ color: 'var(--color-text-muted)', fontSize: '0.95rem', lineHeight: 1.6 }}>
                 Belle et son équipe sourcent vos produits directement en Chine — fournisseurs vérifiés, négociation, contrôle qualité inclus.
               </p>
-              <p style={{ fontFamily: 'var(--font-serif)', fontSize: '2rem', fontWeight: 700, color: 'var(--color-gold)' }}>
-                $1 200
-              </p>
+              <p style={{ fontFamily: 'var(--font-serif)', fontSize: '2rem', fontWeight: 700, color: 'var(--color-gold)' }}>$1 200</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', marginTop: 'auto' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 'var(--space-3) var(--space-4)', background: 'var(--color-surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border-subtle)' }}>
-                  <span style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>📅 Septembre 2026</span>
-                  <a href="mailto:belle@jengasuppliers.com?subject=Sourcing - Septembre 2026" style={{ fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-gold)', textDecoration: 'none', fontWeight: 700 }}>
-                    S&apos;inscrire →
-                  </a>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 'var(--space-3) var(--space-4)', background: 'var(--color-surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border-subtle)' }}>
-                  <span style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>📅 Avril 2027</span>
-                  <a href="mailto:belle@jengasuppliers.com?subject=Sourcing - Avril 2027" style={{ fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-gold)', textDecoration: 'none', fontWeight: 700 }}>
-                    S&apos;inscrire →
-                  </a>
-                </div>
+                {[
+                  { label: 'Septembre 2026', service: 'sourcing-sep-2026' },
+                  { label: 'Avril 2027',     service: 'sourcing-apr-2027' },
+                ].map(({ label, service }) => (
+                  <div key={service} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 'var(--space-3) var(--space-4)', background: 'var(--color-surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border-subtle)' }}>
+                    <span style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>📅 {label}</span>
+                    <button
+                      onClick={() => setWaitlist({ service, serviceLabel: 'Sourcing en Chine pour vous', date: label })}
+                      style={{ fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-gold)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700, padding: 0 }}
+                    >
+                      Rejoindre la liste →
+                    </button>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -94,6 +106,15 @@ export default function LandingPage() {
         <span style={{ fontFamily: 'var(--font-serif)', color: 'var(--color-gold)', fontSize: '13px', letterSpacing: '0.1em' }}>JENGA SUPPLIERS</span>
         <span style={{ fontSize: '10px', color: 'var(--color-text-subtle)', letterSpacing: '0.1em' }}>© 2026 · All rights reserved</span>
       </footer>
+
+      {waitlist && (
+        <WaitlistModal
+          service={waitlist.service}
+          serviceLabel={waitlist.serviceLabel}
+          date={waitlist.date}
+          onClose={() => setWaitlist(null)}
+        />
+      )}
     </>
   )
 }

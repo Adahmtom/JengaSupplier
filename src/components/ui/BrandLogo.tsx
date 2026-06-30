@@ -12,7 +12,7 @@ interface BrandLogoProps {
 
 const sizes = {
   sidebar: 52,
-  nav:     64,
+  nav:     96,
   full:    180,
 }
 
