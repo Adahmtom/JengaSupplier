@@ -19,10 +19,6 @@ async function requireMember(ctx: MutationCtx | QueryCtx) {
   if (!identity) throw new Error('Not authenticated')
   const user = await getUserByClerkId(ctx, identity.subject)
   if (!user) throw new Error('User not found')
-  if (!ADMIN_ROLES.has(user.role)) {
-    const sub = await getActiveSubscription(ctx, user._id)
-    if (!sub) throw new Error('Subscription required')
-  }
   return user
 }
 
@@ -39,10 +35,6 @@ export const listPosts = query({
     if (!identity) return null
     const user = await getUserByClerkId(ctx, identity.subject)
     if (!user) return null
-    if (!ADMIN_ROLES.has(user.role)) {
-      const sub = await getActiveSubscription(ctx, user._id)
-      if (!sub) return null
-    }
 
     const isAdmin = ADMIN_ROLES.has(user.role)
 
