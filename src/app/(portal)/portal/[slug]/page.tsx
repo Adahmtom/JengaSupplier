@@ -29,7 +29,7 @@ export default function PortalPage({ params }: { params: Promise<{ slug: string 
       </header>
 
       {portal && (
-        <Link href={`/community/${slug}`} className={portalStyles.communityCta}>
+        <Link href="/community" className={portalStyles.communityCta}>
           <span className={portalStyles.communityCtaIcon}>💬</span>
           <div className={portalStyles.communityCtaText}>
             <strong>Join the {portal.name} community</strong>

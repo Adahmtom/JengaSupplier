@@ -30,7 +30,7 @@ async function requireMember(ctx: MutationCtx | QueryCtx) {
 
 export const listPosts = query({
   args: {
-    portalId: v.id('portals'),
+    portalId: v.optional(v.id('portals')),
     limit: v.optional(v.number()),
   },
   handler: async (ctx, { portalId, limit = 40 }) => {
@@ -46,11 +46,16 @@ export const listPosts = query({
 
     const isAdmin = ADMIN_ROLES.has(user.role)
 
-    const posts = await ctx.db
-      .query('communityPosts')
-      .withIndex('by_portal', (q) => q.eq('portalId', portalId))
-      .order('desc')
-      .take(safeLimit)
+    const posts = portalId
+      ? await ctx.db
+          .query('communityPosts')
+          .withIndex('by_portal', (q) => q.eq('portalId', portalId))
+          .order('desc')
+          .take(safeLimit)
+      : await ctx.db
+          .query('communityPosts')
+          .order('desc')
+          .take(safeLimit)
 
     const visible = isAdmin ? posts : posts.filter((p) => !p.isHidden)
 
@@ -111,7 +116,7 @@ export const listReportedPosts = query({
 
 export const sendPost = mutation({
   args: {
-    portalId: v.id('portals'),
+    portalId: v.optional(v.id('portals')),
     body: v.string(),
     imageStorageId: v.optional(v.id('_storage')),
   },

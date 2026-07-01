@@ -38,8 +38,9 @@ export function PortalSidebar() {
           <nav>
             <span className={styles.sectionLabel}>{t.main}</span>
             <ul role="list" className={styles.navList}>
-              <SidebarItem href="/feed"   icon="✦" label={t.dailyFeed}  active={isActive('/feed')} />
-              <SidebarItem href="/alerts" icon="⚠" label={t.scamAlerts} active={isActive('/alerts')} />
+              <SidebarItem href="/feed"      icon="✦" label={t.dailyFeed}  active={isActive('/feed')} />
+              <SidebarItem href="/alerts"    icon="⚠" label={t.scamAlerts} active={isActive('/alerts')} />
+              <SidebarItem href="/community" icon="💬" label={lang === 'fr' ? 'Communauté' : 'Community'} active={isActive('/community')} />
             </ul>
 
             <span className={styles.sectionLabel}>{t.portals}</span>
@@ -134,6 +135,12 @@ export function PortalSidebar() {
                     {t.scamAlerts}
                   </Link>
                 </li>
+                <li>
+                  <Link href="/community" className={`${styles.sheetItem} ${isActive('/community') ? styles.sheetItemActive : ''}`} onClick={() => setSheetOpen(false)}>
+                    <span className={styles.sheetIcon}>💬</span>
+                    {lang === 'fr' ? 'Communauté' : 'Community'}
+                  </Link>
+                </li>
                 {portals?.map((portal) => (
                   <li key={portal._id}>
                     <Link
@@ -185,13 +192,17 @@ export function PortalSidebar() {
             Alertes
           </Link>
           <button
-            className={`${styles.mobileNavItem} ${sheetOpen || pathname.startsWith('/portal') || pathname.startsWith('/community') ? styles.mobileActive : ''}`}
+            className={`${styles.mobileNavItem} ${sheetOpen || pathname.startsWith('/portal') ? styles.mobileActive : ''}`}
             onClick={() => setSheetOpen(true)}
             aria-label="Ouvrir les catégories"
           >
             <span className={styles.mobileIcon}>🗂</span>
             {lang === 'fr' ? 'Catégories' : 'Cat.'}
           </button>
+          <Link href="/community" className={`${styles.mobileNavItem} ${isActive('/community') ? styles.mobileActive : ''}`}>
+            <span className={styles.mobileIcon}>💬</span>
+            {lang === 'fr' ? 'Communauté' : 'Community'}
+          </Link>
           <Link href="/account" className={`${styles.mobileNavItem} ${isActive('/account') ? styles.mobileActive : ''}`}>
             <span className={styles.mobileIcon}>👤</span>
             Compte

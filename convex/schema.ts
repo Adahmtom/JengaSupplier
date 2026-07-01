@@ -111,7 +111,7 @@ export default defineSchema({
 
   // ── Community ─────────────────────────────────────────────────────────────
   communityPosts: defineTable({
-    portalId: v.id('portals'),
+    portalId: v.optional(v.id('portals')),
     authorId: v.id('users'),
     body: v.string(),
     imageStorageId: v.optional(v.id('_storage')),
