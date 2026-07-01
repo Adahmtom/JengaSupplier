@@ -19,7 +19,8 @@ export default function AccountPage() {
     window.location.href = url
   }
 
-  const isActive = sub?.status === 'active' || sub?.status === 'trialing'
+  const isAdmin = me?.role === 'super_admin' || me?.role === 'admin' || me?.role === 'moderator'
+  const isActive = isAdmin || sub?.status === 'active' || sub?.status === 'trialing'
   const memberSince = me ? formatDate(me._creationTime) : '—'
 
   function getRoleBadge() {
@@ -58,61 +59,68 @@ export default function AccountPage() {
         </div>
       </section>
 
-      {/* Subscription */}
-      <section className={styles.card} aria-labelledby="sub-heading">
-        <div className={styles.cardHeader}>
-          <p className="label" id="sub-heading">{t.subscription}</p>
-          {isActive && <span className={styles.statusPill}>● {t.active}</span>}
-        </div>
-
-        {!sub ? (
-          <div className={styles.noSubWrap}>
-            <p className={styles.noSub}>{t.noSubscription}</p>
-            <a href="/checkout" className="btn btn-primary" style={{ display: 'inline-block', marginTop: 'var(--space-4)' }}>
-              {t.subscribeNow}
-            </a>
+      {/* Subscription — hidden for admins who have full access by role */}
+      {!isAdmin && (
+        <section className={styles.card} aria-labelledby="sub-heading">
+          <div className={styles.cardHeader}>
+            <p className="label" id="sub-heading">{t.subscription}</p>
+            {isActive && <span className={styles.statusPill}>● {t.active}</span>}
           </div>
-        ) : (
-          <>
-            <div className={styles.planBox}>
-              <div>
-                <p className={styles.planName}>{t.planName}</p>
-                <p className={styles.planPrice}>$29 <span>/mois</span></p>
-              </div>
-              <div className={`${styles.statusDot} ${isActive ? styles.dotActive : styles.dotInactive}`} />
-            </div>
 
-            <div className={styles.fields}>
-              <div className={styles.field}>
-                <span className={styles.fieldLabel}>{t.statusLabel}</span>
-                <span className={`${styles.fieldValue} ${isActive ? styles.textSuccess : styles.textAlert}`}>
-                  {sub.status === 'active' ? t.statusActive :
-                   sub.status === 'trialing' ? t.statusTrialing :
-                   sub.status === 'canceled' ? t.statusCanceled : sub.status}
-                </span>
-              </div>
-              <div className={styles.field}>
-                <span className={styles.fieldLabel}>
-                  {sub.cancelAtPeriodEnd ? t.cancelsOn : t.renewsOn}
-                </span>
-                <span className={styles.fieldValue}>{formatDate(sub.currentPeriodEnd)}</span>
-              </div>
+          {!sub ? (
+            <div className={styles.noSubWrap}>
+              <p className={styles.noSub}>{t.noSubscription}</p>
+              <a href="/" className="btn btn-primary" style={{ display: 'inline-block', marginTop: 'var(--space-4)' }}>
+                {t.subscribeNow}
+              </a>
             </div>
-
-            {sub.cancelAtPeriodEnd && (
-              <div className={styles.cancelWarning}>
-                ⚠ {t.cancelWarning} {formatDate(sub.currentPeriodEnd)}{t.cancelWarningEnd}
+          ) : (
+            <>
+              <div className={styles.planBox}>
+                <div>
+                  <p className={styles.planName}>{t.planName}</p>
+                  <p className={styles.planPrice}>
+                    {sub.stripePriceId?.includes('yearly') || sub.stripePriceId?.includes('year') || sub.stripePriceId?.includes('annual')
+                      ? <>${'199'} <span>/an</span></>
+                      : <>${'29'} <span>/mois</span></>
+                    }
+                  </p>
+                </div>
+                <div className={`${styles.statusDot} ${isActive ? styles.dotActive : styles.dotInactive}`} />
               </div>
-            )}
 
-            <div className={styles.billingActions}>
-              <button onClick={handleManageBilling} className="btn btn-ghost">
-                {t.manageBilling}
-              </button>
-            </div>
-          </>
-        )}
-      </section>
+              <div className={styles.fields}>
+                <div className={styles.field}>
+                  <span className={styles.fieldLabel}>{t.statusLabel}</span>
+                  <span className={`${styles.fieldValue} ${isActive ? styles.textSuccess : styles.textAlert}`}>
+                    {sub.status === 'active' ? t.statusActive :
+                     sub.status === 'trialing' ? t.statusTrialing :
+                     sub.status === 'canceled' ? t.statusCanceled : sub.status}
+                  </span>
+                </div>
+                <div className={styles.field}>
+                  <span className={styles.fieldLabel}>
+                    {sub.cancelAtPeriodEnd ? t.cancelsOn : t.renewsOn}
+                  </span>
+                  <span className={styles.fieldValue}>{formatDate(sub.currentPeriodEnd)}</span>
+                </div>
+              </div>
+
+              {sub.cancelAtPeriodEnd && (
+                <div className={styles.cancelWarning}>
+                  ⚠ {t.cancelWarning} {formatDate(sub.currentPeriodEnd)}{t.cancelWarningEnd}
+                </div>
+              )}
+
+              <div className={styles.billingActions}>
+                <button onClick={handleManageBilling} className="btn btn-ghost">
+                  {t.manageBilling}
+                </button>
+              </div>
+            </>
+          )}
+        </section>
+      )}
 
       {/* What's included */}
       <section className={styles.card} aria-labelledby="access-heading">
@@ -123,10 +131,9 @@ export default function AccountPage() {
           {t.access.map((label, i) => {
             const icons = ['📦','🗓','🎬','⚠','📋','🌐','📊','🚚','🎙','♾']
             return (
-              <div key={i} className={`${styles.accessItem} ${!isActive ? styles.accessLocked : ''}`}>
+              <div key={i} className={styles.accessItem}>
                 <span className={styles.accessIcon}>{icons[i]}</span>
                 <span className={styles.accessLabel}>{label}</span>
-                {!isActive && <span className={styles.lockBadge}>🔒</span>}
               </div>
             )
           })}

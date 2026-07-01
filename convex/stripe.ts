@@ -121,7 +121,7 @@ export const activateGuestSubscription = action({
       stripeSubscriptionId: sub.id as string,
       stripePriceId: priceId,
       status: sub.status as 'active' | 'trialing' | 'past_due' | 'canceled' | 'incomplete' | 'incomplete_expired' | 'unpaid' | 'paused',
-      currentPeriodEnd: sub.current_period_end as number,
+      currentPeriodEnd: (sub.current_period_end as number) * 1000,
       cancelAtPeriodEnd: sub.cancel_at_period_end as boolean,
     })
   },
