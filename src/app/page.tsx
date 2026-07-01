@@ -33,6 +33,33 @@ export default function LandingPage() {
         </section>
         <Pricing />
 
+        {/* ── Already a member CTA ── */}
+        <section style={{ padding: 'var(--space-16) var(--space-8)', textAlign: 'center' }}>
+          <div style={{
+            maxWidth: '560px',
+            margin: '0 auto',
+            background: 'var(--color-surface-2)',
+            border: '1px solid var(--color-border-subtle)',
+            borderRadius: 'var(--radius-xl)',
+            padding: 'var(--space-10) var(--space-8)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 'var(--space-4)',
+          }}>
+            <p className="label">Déjà membre ?</p>
+            <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(1.3rem, 2.5vw, 1.8rem)', fontWeight: 700, color: 'var(--color-text)', lineHeight: 1.3 }}>
+              Accédez à votre Vault
+            </h2>
+            <p style={{ fontSize: '0.95rem', color: 'var(--color-text-muted)', maxWidth: '380px', lineHeight: 1.6 }}>
+              Retrouvez vos fournisseurs, les alertes exclusives et toute la communauté Jenga.
+            </p>
+            <a href="/sign-in" className="btn btn-primary" style={{ marginTop: 'var(--space-2)', padding: '12px 32px', fontSize: '11px', letterSpacing: '0.1em' }}>
+              Se connecter →
+            </a>
+          </div>
+        </section>
+
         {/* ── Services section ── */}
         <section style={{ padding: 'var(--space-24) var(--space-8)', maxWidth: 'var(--content-max)', margin: '0 auto' }}>
           <p className="label" style={{ textAlign: 'center', marginBottom: 'var(--space-4)' }}>✦ Services Exclusifs</p>
