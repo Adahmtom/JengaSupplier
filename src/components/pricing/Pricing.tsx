@@ -23,7 +23,7 @@ function savePlan(plan: string) {
 
 export function Pricing() {
   const { isSignedIn } = useAuth()
-  const base = isSignedIn ? '/checkout' : '/sign-up'
+  const base = isSignedIn ? '/checkout' : '/pre-checkout'
 
   return (
     <section id="pricing" className={styles.section} aria-labelledby="pricing-heading">
