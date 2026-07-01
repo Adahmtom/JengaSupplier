@@ -64,7 +64,8 @@ http.route({
         }
       }
 
-      if (!userId) return new Response('User not found', { status: 400 })
+      // For payment-first flow, user may not exist yet — activateGuestSubscription handles activation after sign-up
+      if (!userId) return new Response('ok', { status: 200 })
 
       const item = subscription.items.data[0]
       await ctx.runMutation(internal.subscriptions.upsertSubscription, {
