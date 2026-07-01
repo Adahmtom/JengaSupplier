@@ -96,14 +96,15 @@
   .links { gap: var(--space-5); }
 }
 
-/* Mobile: hide nav links, keep logo + CTA */
+/* Mobile: hide nav links, keep logo + actions */
 @media (max-width: 640px) {
   .links { display: none; }
-  .signIn { display: none; }
   .nav { padding: 0 var(--space-4); }
+  .signIn { font-size: 9px; }
 }
 
-/* Small mobile: compact button */
+/* Small mobile: compact */
 @media (max-width: 400px) {
   .logo { font-size: 0.75rem; letter-spacing: 0.1em; }
+  .themeBtn { width: 26px; height: 26px; font-size: 12px; }
 }

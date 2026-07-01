@@ -2,11 +2,16 @@
   display: grid;
   grid-template-columns: var(--sidebar-width) 1fr;
   min-height: 100dvh;
+  /* Prevent any child from creating horizontal scroll */
+  overflow-x: hidden;
+  max-width: 100vw;
 }
 
 .main {
   background: var(--color-bg);
   min-height: 100dvh;
+  min-width: 0; /* critical: prevents grid child from overflowing */
+  overflow-x: hidden;
   /* On large screens, content stays readable with generous padding */
   padding: var(--space-10) clamp(var(--space-6), 4vw, var(--space-14));
 }
