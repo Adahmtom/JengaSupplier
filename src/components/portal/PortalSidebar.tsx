@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useQuery } from 'convex/react'
+import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { UserButton, useClerk } from '@clerk/nextjs'
 import { useLang } from '@/lib/i18n'
@@ -15,6 +15,13 @@ export function PortalSidebar() {
   const pathname = usePathname()
   const portals = useQuery(api.portals.listPortals)
   const me = useQuery(api.users.getMe)
+  const ensureUser = useMutation(api.users.ensureUser)
+
+  // Self-heal: create the Convex user record if the Clerk webhook never fired
+  useEffect(() => {
+    ensureUser().catch(() => {})
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   const { signOut } = useClerk()
   const { t, lang, toggle } = useLang()
   const { theme, toggleTheme } = useTheme()

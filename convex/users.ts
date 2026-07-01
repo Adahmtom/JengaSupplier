@@ -42,6 +42,31 @@ export const getMe = query({
   },
 })
 
+// Called client-side on every portal page load — ensures the user record exists
+// even if the Clerk webhook failed to fire (race conditions, misconfiguration, etc.)
+export const ensureUser = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) return null
+
+    const existing = await ctx.db
+      .query('users')
+      .withIndex('by_clerkId', (q) => q.eq('clerkId', identity.subject))
+      .unique()
+
+    if (existing) return existing._id
+
+    return ctx.db.insert('users', {
+      clerkId: identity.subject,
+      email: identity.email ?? '',
+      name: identity.name ?? undefined,
+      imageUrl: identity.pictureUrl ?? undefined,
+      role: 'member',
+    })
+  },
+})
+
 export const getUserByClerkId = internalQuery({
   args: { clerkId: v.string() },
   handler: async (ctx, { clerkId }) => {
