@@ -13,11 +13,22 @@ export default function CommunityPage() {
   const [limit, setLimit] = useState(POSTS_PER_PAGE)
   const posts = useQuery(api.community.listPosts, { limit })
 
-  if (posts === null || posts === undefined) {
+  if (posts === undefined) {
     return (
       <div className={styles.page}>
         <div className={styles.empty}>
           <p style={{ color: 'var(--color-text-muted)', fontSize: 14 }}>Chargement…</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (posts === null) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.empty}>
+          <span className={styles.emptyIcon}>💬</span>
+          <p>Communauté</p>
         </div>
       </div>
     )
@@ -28,9 +39,7 @@ export default function CommunityPage() {
       <header className={styles.header}>
         <div>
           <h1 className={styles.title}>💬 Communauté</h1>
-          <p className={styles.subtitle}>
-            {posts !== undefined ? `${posts.length} publications` : '…'}
-          </p>
+          <p className={styles.subtitle}>{posts.length} publications</p>
         </div>
       </header>
 
@@ -39,24 +48,18 @@ export default function CommunityPage() {
       <section
         className={styles.feed}
         aria-label="Publications"
-        aria-busy={posts === undefined}
+        aria-busy={false}
       >
-        {posts === undefined && (
-          <>
-            {[1, 2, 3].map((i) => <PostSkeleton key={`skeleton-${i}`} />)}
-            <p className="sr-only" role="status">Chargement des publications…</p>
-          </>
-        )}
-        {posts?.length === 0 && (
+        {posts.length === 0 && (
           <div className={styles.empty}>
             <span className={styles.emptyIcon}>💬</span>
             <p>Soyez le premier à publier dans la communauté !</p>
           </div>
         )}
-        {posts?.map((post) => (
+        {posts.map((post) => (
           <PostCard key={post._id} post={post} />
         ))}
-        {posts && posts.length >= limit && (
+        {posts.length >= limit && (
           <button className={styles.loadMore} onClick={() => setLimit(l => l + POSTS_PER_PAGE)}>
             Voir plus de publications
           </button>
