@@ -37,11 +37,10 @@ function PlanButton({
   isSignedIn: boolean
 }) {
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
   const createGuestCheckout = useAction(api.stripe.createGuestCheckoutSession)
 
   async function handleClick() {
-    if (isSignedIn) return // Link handles it
-
     const paymentLink = plan === 'yearly' ? STRIPE_YEARLY_LINK : STRIPE_MONTHLY_LINK
     if (paymentLink) {
       window.location.href = paymentLink
@@ -50,11 +49,13 @@ function PlanButton({
 
     // Fallback: dynamic session creation
     setLoading(true)
+    setError('')
     try {
       const url = await createGuestCheckout({ plan })
       window.location.href = url
-    } catch {
+    } catch (err) {
       setLoading(false)
+      setError(err instanceof Error ? err.message : 'Une erreur est survenue. Réessayez.')
     }
   }
 
@@ -67,14 +68,17 @@ function PlanButton({
   }
 
   return (
-    <button
-      className={className}
-      onClick={handleClick}
-      disabled={loading}
-      aria-busy={loading}
-    >
-      {loading ? 'Redirection…' : label}
-    </button>
+    <>
+      <button
+        className={className}
+        onClick={handleClick}
+        disabled={loading}
+        aria-busy={loading}
+      >
+        {loading ? 'Redirection…' : label}
+      </button>
+      {error && <p role="alert" style={{ color: 'var(--color-error, #e53e3e)', fontSize: '0.85rem', marginTop: '8px', textAlign: 'center' }}>{error}</p>}
+    </>
   )
 }
 
