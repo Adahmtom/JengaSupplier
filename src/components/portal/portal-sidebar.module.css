@@ -358,6 +358,62 @@
 }
 .sheetClose:hover { color: var(--color-text); }
 
+/* ── Desktop: combined portal + community row ── */
+.portalRow {
+  display: flex;
+  align-items: center;
+}
+
+.portalLink {
+  flex: 1;
+  min-width: 0;
+}
+
+.communityBtn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-right: var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  text-decoration: none;
+  color: var(--color-text-muted);
+  transition: background var(--duration-fast), color var(--duration-fast);
+}
+.communityBtn:hover { background: var(--color-surface-2); color: var(--color-text-primary); }
+.communityBtnActive { background: rgba(201, 168, 76, 0.1); color: var(--color-gold); }
+
+/* ── Mobile sheet: combined portal + community row ── */
+.sheetPortalRow {
+  display: flex;
+  align-items: center;
+}
+
+.sheetPortalLink {
+  flex: 1;
+  min-width: 0;
+}
+
+.sheetCommunityBtn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin-right: var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: 18px;
+  text-decoration: none;
+  color: var(--color-text-muted);
+  transition: background var(--duration-fast), color var(--duration-fast);
+}
+.sheetCommunityBtn:hover { background: var(--color-surface-2); color: var(--color-text-primary); }
+.sheetCommunityBtnActive { background: rgba(201, 168, 76, 0.1); color: var(--color-gold); }
+
 .sheetList { list-style: none; padding: var(--space-2) 0; }
 
 .sheetItem {
