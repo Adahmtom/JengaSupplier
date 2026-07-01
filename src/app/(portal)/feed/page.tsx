@@ -125,7 +125,7 @@ export default function FeedPage() {
       {/* Loading skeletons */}
       {isLoading && (
         <div className={styles.feed}>
-          {Array.from({ length: 4 }).map((_, i) => (
+          {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className={styles.skeletonCard} />
           ))}
         </div>
