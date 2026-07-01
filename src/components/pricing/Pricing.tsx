@@ -1,8 +1,16 @@
 'use client'
 
 import Link from 'next/link'
+import { useState } from 'react'
 import { useAuth } from '@clerk/nextjs'
+import { useAction } from 'convex/react'
+import { api } from '../../../convex/_generated/api'
 import styles from './pricing.module.css'
+
+// Set these once after creating Payment Links in the Stripe dashboard.
+// If blank, falls back to dynamic session creation via /pre-checkout.
+const STRIPE_MONTHLY_LINK = process.env.NEXT_PUBLIC_STRIPE_MONTHLY_LINK ?? ''
+const STRIPE_YEARLY_LINK  = process.env.NEXT_PUBLIC_STRIPE_YEARLY_LINK  ?? ''
 
 const PERKS = [
   'Plus de 500 fournisseurs vérifiés',
@@ -17,13 +25,61 @@ const PERKS = [
   'Résiliez à tout moment — sans engagement',
 ]
 
-function savePlan(plan: string) {
-  try { localStorage.setItem('jenga_plan', plan) } catch {}
+function PlanButton({
+  plan,
+  label,
+  className,
+  isSignedIn,
+}: {
+  plan: 'monthly' | 'yearly'
+  label: string
+  className: string
+  isSignedIn: boolean
+}) {
+  const [loading, setLoading] = useState(false)
+  const createGuestCheckout = useAction(api.stripe.createGuestCheckoutSession)
+
+  async function handleClick() {
+    if (isSignedIn) return // Link handles it
+
+    const paymentLink = plan === 'yearly' ? STRIPE_YEARLY_LINK : STRIPE_MONTHLY_LINK
+    if (paymentLink) {
+      window.location.href = paymentLink
+      return
+    }
+
+    // Fallback: dynamic session creation
+    setLoading(true)
+    try {
+      const url = await createGuestCheckout({ plan })
+      window.location.href = url
+    } catch {
+      setLoading(false)
+    }
+  }
+
+  if (isSignedIn) {
+    return (
+      <Link href={`/checkout?plan=${plan}`} className={className}>
+        {label}
+      </Link>
+    )
+  }
+
+  return (
+    <button
+      className={className}
+      onClick={handleClick}
+      disabled={loading}
+      aria-busy={loading}
+    >
+      {loading ? 'Redirection…' : label}
+    </button>
+  )
 }
 
 export function Pricing() {
   const { isSignedIn } = useAuth()
-  const base = isSignedIn ? '/checkout' : '/pre-checkout'
 
   return (
     <section id="pricing" className={styles.section} aria-labelledby="pricing-heading">
@@ -57,9 +113,7 @@ export function Pricing() {
             ))}
           </ul>
 
-          <Link href={`${base}?plan=monthly`} onClick={() => savePlan('monthly')} className={`btn ${styles.joinBtnSecondary}`}>
-            Deviens Membre
-          </Link>
+          <PlanButton plan="monthly" label="Deviens Membre" className={`btn ${styles.joinBtnSecondary}`} isSignedIn={!!isSignedIn} />
           <p className={styles.note}>Accès instantané · Aucun frais caché</p>
         </div>
 
@@ -90,9 +144,7 @@ export function Pricing() {
             ))}
           </ul>
 
-          <Link href={`${base}?plan=yearly`} onClick={() => savePlan('yearly')} className={`btn btn-primary ${styles.joinBtn}`}>
-            Commencer — $299/an
-          </Link>
+          <PlanButton plan="yearly" label="Commencer — $299/an" className={`btn btn-primary ${styles.joinBtn}`} isSignedIn={!!isSignedIn} />
           <p className={styles.note}>Accès instantané · Facturation annuelle · Aucun frais caché</p>
         </div>
 

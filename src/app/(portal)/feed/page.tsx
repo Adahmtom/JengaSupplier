@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useMemo } from 'react'
-import { useQuery } from 'convex/react'
+import { useState, useMemo, useEffect, useRef } from 'react'
+import { useQuery, useAction } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import { DropCard } from '@/components/portal/DropCard'
 import { useLang } from '@/lib/i18n'
@@ -13,6 +13,20 @@ export default function FeedPage() {
   const [search, setSearch] = useState('')
   const [activePortal, setActivePortal] = useState<string | null>(null)
   const { t } = useLang()
+  const activateSubscription = useAction(api.stripe.activateGuestSubscription)
+  const me = useQuery(api.users.getMe)
+  const activated = useRef(false)
+
+  // Silently activate subscription if user just came from Stripe payment
+  useEffect(() => {
+    if (activated.current || !me) return
+    let sessionId = ''
+    try { sessionId = sessionStorage.getItem('jenga_stripe_session') ?? '' } catch {}
+    if (!sessionId) return
+    activated.current = true
+    try { sessionStorage.removeItem('jenga_stripe_session') } catch {}
+    activateSubscription({ sessionId }).catch(() => {})
+  }, [me, activateSubscription])
 
   const portalMap = useMemo(
     () => new Map(portals?.map((p) => [p._id, p]) ?? []),
