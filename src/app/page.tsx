@@ -123,7 +123,8 @@ function useCountdown(target: Date) {
     if (ms === 0) return
     const id = setInterval(() => setMs(getRemaining()), 1000)
     return () => clearInterval(id)
-  }, [ms])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const total = ms / 1000
   const days  = Math.floor(total / 86400)

@@ -49,7 +49,7 @@ http.route({
       }
 
       const customerId = subscription.customer as string
-      const user = await ctx.runQuery(api.subscriptions.getUserByStripeCustomerId, {
+      const user = await ctx.runQuery(internal.subscriptions.getUserByStripeCustomerId, {
         stripeCustomerId: customerId,
       })
 
@@ -59,7 +59,7 @@ http.route({
         const session = event.data.object as import('stripe').Stripe.Checkout.Session
         const clerkId = session.metadata?.clerkId
         if (clerkId) {
-          const foundUser = await ctx.runQuery(api.users.getUserByClerkId, { clerkId })
+          const foundUser = await ctx.runQuery(internal.users.getUserByClerkId, { clerkId })
           userId = foundUser?._id
         }
       }
@@ -67,7 +67,7 @@ http.route({
       if (!userId) return new Response('User not found', { status: 400 })
 
       const item = subscription.items.data[0]
-      await ctx.runMutation(api.subscriptions.upsertSubscription, {
+      await ctx.runMutation(internal.subscriptions.upsertSubscription, {
         userId,
         stripeCustomerId: customerId,
         stripeSubscriptionId: subscription.id,
@@ -126,7 +126,7 @@ http.route({
         (e) => e.id === data.primary_email_address_id,
       )
 
-      await ctx.runMutation(api.users.upsertUser, {
+      await ctx.runMutation(internal.users.upsertUser, {
         clerkId: data.id as string,
         email: primaryEmail?.email_address ?? '',
         name:
@@ -139,26 +139,13 @@ http.route({
   }),
 })
 
-// ── One-time admin bootstrap (no auth required, secret-protected) ───────────
+// Bootstrap endpoint disabled after initial setup.
+// To promote a user: use the Convex dashboard to run internal.users.bootstrapAdmin directly.
 http.route({
   path: '/admin/bootstrap',
   method: 'POST',
-  handler: httpAction(async (ctx, request) => {
-    const { email, secret } = await request.json() as { email?: string; secret?: string }
-
-    const expected = process.env.ADMIN_INVITE_CODE
-    if (!expected || secret !== expected) {
-      return new Response('Forbidden', { status: 403 })
-    }
-
-    if (!email) return new Response('Email required', { status: 400 })
-
-    await ctx.runMutation(internal.users.bootstrapAdmin, { email })
-
-    return new Response(JSON.stringify({ ok: true }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    })
+  handler: httpAction(async (_ctx, _request) => {
+    return new Response('Disabled', { status: 410 })
   }),
 })
 

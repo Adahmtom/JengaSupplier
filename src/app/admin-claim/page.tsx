@@ -18,7 +18,10 @@ function AdminClaimInner() {
   const [errorMsg, setErrorMsg] = useState('')
 
   useEffect(() => {
-    const code = params.get('code') ?? ''
+    // Read from sessionStorage (set by admin-signup after server-side verification).
+    // Fall back to URL param for backward compatibility.
+    const code = sessionStorage.getItem('adminClaimCode') ?? params.get('code') ?? ''
+    sessionStorage.removeItem('adminClaimCode')
     let cancelled = false
     let attempt = 0
 

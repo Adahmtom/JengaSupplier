@@ -19,6 +19,7 @@ export function PortalSidebar() {
   const { t, lang, toggle } = useLang()
   const { theme, toggleTheme } = useTheme()
   const [sheetOpen, setSheetOpen] = useState(false)
+  const [sheetSection, setSheetSection] = useState<'categories' | 'community'>('categories')
 
   const isAdmin = me?.role === 'super_admin' || me?.role === 'admin' || me?.role === 'moderator'
 
@@ -124,72 +125,89 @@ export function PortalSidebar() {
             onClick={() => setSheetOpen(false)}
             aria-hidden="true"
           />
-          <div className={styles.sheet} role="dialog" aria-label="Catégories">
+          <div
+            className={styles.sheet}
+            role="dialog"
+            aria-modal="true"
+            aria-label={sheetSection === 'community'
+              ? (lang === 'fr' ? 'Communauté' : 'Community')
+              : (lang === 'fr' ? 'Catégories' : 'Categories')}
+          >
             <div className={styles.sheetHandle} />
             <div className={styles.sheetHeader}>
               <span className={styles.sheetTitle}>
-                {lang === 'fr' ? 'Catégories' : 'Categories'}
+                {sheetSection === 'community'
+                  ? (lang === 'fr' ? 'Communauté' : 'Community')
+                  : (lang === 'fr' ? 'Catégories' : 'Categories')}
               </span>
               <button className={styles.sheetClose} onClick={() => setSheetOpen(false)} aria-label="Fermer">✕</button>
             </div>
             <nav>
               <ul role="list" className={styles.sheetList}>
-                <li>
-                  <Link
-                    href="/feed"
-                    className={`${styles.sheetItem} ${isActive('/feed') ? styles.sheetItemActive : ''}`}
-                    onClick={() => setSheetOpen(false)}
-                  >
-                    <span className={styles.sheetIcon}>✦</span>
-                    {t.dailyFeed}
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/alerts"
-                    className={`${styles.sheetItem} ${isActive('/alerts') ? styles.sheetItemActive : ''}`}
-                    onClick={() => setSheetOpen(false)}
-                  >
-                    <span className={styles.sheetIcon}>⚠</span>
-                    {t.scamAlerts}
-                  </Link>
-                </li>
-                {portals?.map((portal) => (
-                  <li key={portal._id}>
-                    <Link
-                      href={`/portal/${portal.slug}`}
-                      className={`${styles.sheetItem} ${isActive(`/portal/${portal.slug}`) ? styles.sheetItemActive : ''}`}
-                      onClick={() => setSheetOpen(false)}
-                    >
-                      <span className={styles.sheetIcon}>{portal.emoji}</span>
-                      {portal.name}
-                    </Link>
-                  </li>
-                ))}
-                {portals && portals.length > 0 && (
-                  <li style={{ paddingTop: 'var(--space-2)', paddingBottom: 2, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-text-subtle)', fontWeight: 700, fontFamily: 'var(--font-sans)', paddingLeft: 'var(--space-5)' }}>
-                    {lang === 'fr' ? 'Communauté' : 'Community'}
-                  </li>
+                {sheetSection === 'categories' ? (
+                  <>
+                    <li>
+                      <Link
+                        href="/feed"
+                        className={`${styles.sheetItem} ${isActive('/feed') ? styles.sheetItemActive : ''}`}
+                        onClick={() => setSheetOpen(false)}
+                      >
+                        <span className={styles.sheetIcon}>✦</span>
+                        {t.dailyFeed}
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        href="/alerts"
+                        className={`${styles.sheetItem} ${isActive('/alerts') ? styles.sheetItemActive : ''}`}
+                        onClick={() => setSheetOpen(false)}
+                      >
+                        <span className={styles.sheetIcon}>⚠</span>
+                        {t.scamAlerts}
+                      </Link>
+                    </li>
+                    {portals?.map((portal) => (
+                      <li key={portal._id}>
+                        <Link
+                          href={`/portal/${portal.slug}`}
+                          className={`${styles.sheetItem} ${isActive(`/portal/${portal.slug}`) ? styles.sheetItemActive : ''}`}
+                          onClick={() => setSheetOpen(false)}
+                        >
+                          <span className={styles.sheetIcon}>{portal.emoji}</span>
+                          {portal.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </>
+                ) : (
+                  portals?.map((portal) => (
+                    <li key={portal._id + '-community'}>
+                      <Link
+                        href={`/community/${portal.slug}`}
+                        className={`${styles.sheetItem} ${pathname === `/community/${portal.slug}` ? styles.sheetItemActive : ''}`}
+                        onClick={() => setSheetOpen(false)}
+                      >
+                        <span className={styles.sheetIcon}>💬</span>
+                        {portal.name}
+                      </Link>
+                    </li>
+                  ))
                 )}
-                {portals?.map((portal) => (
-                  <li key={portal._id + '-community'}>
-                    <Link
-                      href={`/community/${portal.slug}`}
-                      className={`${styles.sheetItem} ${pathname === `/community/${portal.slug}` ? styles.sheetItemActive : ''}`}
-                      onClick={() => setSheetOpen(false)}
-                    >
-                      <span className={styles.sheetIcon}>💬</span>
-                      {portal.name}
-                    </Link>
-                  </li>
-                ))}
               </ul>
             </nav>
             <div className={styles.sheetBottom}>
-              <button className={styles.sheetAction} onClick={toggleTheme}>
+              <button
+                className={styles.sheetAction}
+                onClick={toggleTheme}
+                aria-pressed={theme === 'dark'}
+              >
                 {theme === 'dark' ? '☀ Light mode' : '☾ Dark mode'}
               </button>
-              <button className={styles.sheetAction} onClick={toggle}>
+              <button
+                className={styles.sheetAction}
+                onClick={toggle}
+                aria-pressed={lang === 'fr'}
+              >
                 {lang === 'fr' ? '🇬🇧 English' : '🇫🇷 Français'}
               </button>
               {isAdmin && (
@@ -214,17 +232,17 @@ export function PortalSidebar() {
             Alertes
           </Link>
           <button
-            className={`${styles.mobileNavItem} ${sheetOpen ? styles.mobileActive : ''} ${pathname.startsWith('/portal') ? styles.mobileActive : ''}`}
-            onClick={() => setSheetOpen(true)}
+            className={`${styles.mobileNavItem} ${(sheetOpen && sheetSection === 'categories') || pathname.startsWith('/portal') ? styles.mobileActive : ''}`}
+            onClick={() => { setSheetSection('categories'); setSheetOpen(true) }}
             aria-label="Ouvrir les catégories"
           >
             <span className={styles.mobileIcon}>🗂</span>
             {lang === 'fr' ? 'Catégories' : 'Cat.'}
           </button>
           <button
-            className={`${styles.mobileNavItem} ${pathname.startsWith('/community') ? styles.mobileActive : ''}`}
-            onClick={() => setSheetOpen(true)}
-            aria-label="Communauté"
+            className={`${styles.mobileNavItem} ${(sheetOpen && sheetSection === 'community') || pathname.startsWith('/community') ? styles.mobileActive : ''}`}
+            onClick={() => { setSheetSection('community'); setSheetOpen(true) }}
+            aria-label="Ouvrir la communauté"
           >
             <span className={styles.mobileIcon}>💬</span>
             {lang === 'fr' ? 'Communauté' : 'Community'}

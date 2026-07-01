@@ -1,4 +1,4 @@
-import { mutation, query } from './_generated/server'
+import { internalMutation, internalQuery, mutation, query } from './_generated/server'
 import { v } from 'convex/values'
 import { requireAuth } from './_helpers'
 
@@ -31,7 +31,7 @@ export const getMySubscription = query({
   },
 })
 
-export const upsertSubscription = mutation({
+export const upsertSubscription = internalMutation({
   args: {
     userId: v.id('users'),
     stripeCustomerId: v.string(),
@@ -72,7 +72,7 @@ export const upsertSubscription = mutation({
   },
 })
 
-export const getUserByStripeCustomerId = query({
+export const getUserByStripeCustomerId = internalQuery({
   args: { stripeCustomerId: v.string() },
   handler: async (ctx, { stripeCustomerId }) => {
     const sub = await ctx.db

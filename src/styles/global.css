@@ -104,7 +104,7 @@ body {
   transition: border-color var(--duration-fast) var(--ease-out-expo);
 }
 .input::placeholder { color: var(--color-text-placeholder); }
-.input:focus { border-color: var(--color-gold); }
+.input:focus { border-color: var(--color-gold); outline: 2px solid var(--color-gold); outline-offset: 2px; }
 
 /* ── Badge ── */
 .badge {
@@ -174,4 +174,37 @@ body {
   max-width: var(--content-max);
   margin: 0 auto;
   padding: 0 var(--space-8);
+}
+
+/* ── Accessibility utilities ── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.skip-link:focus {
+  position: fixed;
+  top: var(--space-4);
+  left: var(--space-4);
+  z-index: 9999;
+  width: auto;
+  height: auto;
+  padding: var(--space-3) var(--space-5);
+  background: var(--color-gold);
+  color: #000;
+  font-weight: 700;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  border-radius: var(--radius-md);
+  clip: auto;
+  white-space: normal;
+  text-decoration: none;
+  outline: 2px solid #000;
 }

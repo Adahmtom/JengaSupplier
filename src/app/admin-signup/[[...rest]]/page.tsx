@@ -2,22 +2,30 @@
 
 import { useState } from 'react'
 import { SignUp } from '@clerk/nextjs'
+import { verifyAdminInviteCode } from '../actions'
 import styles from './admin-signup.module.css'
-
-const INVITE_CODE = process.env.NEXT_PUBLIC_ADMIN_INVITE_CODE ?? ''
 
 export default function AdminSignupPage() {
   const [code, setCode] = useState('')
   const [codeError, setCodeError] = useState('')
   const [verified, setVerified] = useState(false)
+  const [loading, setLoading] = useState(false)
 
-  function handleVerify(e: React.FormEvent) {
+  async function handleVerify(e: React.FormEvent) {
     e.preventDefault()
-    if (code.trim() === INVITE_CODE) {
-      setVerified(true)
-      setCodeError('')
-    } else {
-      setCodeError('Incorrect invite code. Contact Belle Jones for access.')
+    setLoading(true)
+    setCodeError('')
+    try {
+      const ok = await verifyAdminInviteCode(code)
+      if (ok) {
+        // Store code in sessionStorage so admin-claim can read it without URL exposure
+        sessionStorage.setItem('adminClaimCode', code)
+        setVerified(true)
+      } else {
+        setCodeError('Incorrect invite code. Contact Belle Jones for access.')
+      }
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -63,8 +71,8 @@ export default function AdminSignupPage() {
               required
             />
             {codeError && <p className={styles.codeError}>{codeError}</p>}
-            <button type="submit" className={`btn btn-primary ${styles.verifyBtn}`}>
-              Verify &amp; Continue
+            <button type="submit" className={`btn btn-primary ${styles.verifyBtn}`} disabled={loading}>
+              {loading ? 'Vérification…' : 'Verify & Continue'}
             </button>
             <p className={styles.memberLink2}>
               <a href="/admin-login">← Back to admin login</a>
@@ -74,7 +82,7 @@ export default function AdminSignupPage() {
           <div className={styles.clerkWrap}>
             <p className={styles.codeOk}>✓ Invite code verified</p>
             <SignUp
-              forceRedirectUrl={`/admin-claim?code=${encodeURIComponent(INVITE_CODE)}`}
+              forceRedirectUrl="/admin-claim"
               appearance={{
                 variables: {
                   colorPrimary: '#9B2FFF',

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useMutation } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import styles from './waitlist.module.css'
@@ -18,6 +18,46 @@ export function WaitlistModal({ service, serviceLabel, date, onClose }: Waitlist
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({ name: '', email: '', phone: '' })
 
+  const modalRef = useRef<HTMLDivElement>(null)
+  const closeBtnRef = useRef<HTMLButtonElement>(null)
+  // Element that had focus before the modal opened
+  const returnFocusRef = useRef<HTMLElement | null>(null)
+
+  // On open: store returning element, move focus inside
+  useEffect(() => {
+    returnFocusRef.current = document.activeElement as HTMLElement
+    closeBtnRef.current?.focus()
+
+    // Focus trap
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') { onClose(); return }
+      if (e.key !== 'Tab') return
+
+      const modal = modalRef.current
+      if (!modal) return
+      const focusable = modal.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      )
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last.focus() }
+      } else {
+        if (document.activeElement === last) { e.preventDefault(); first.focus() }
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
+
+  // On close: return focus
+  function handleClose() {
+    returnFocusRef.current?.focus()
+    onClose()
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!form.name || !form.email || !form.phone) return
@@ -31,14 +71,20 @@ export function WaitlistModal({ service, serviceLabel, date, onClose }: Waitlist
   }
 
   return (
-    <div className={styles.overlay} onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className={styles.modal} role="dialog" aria-modal="true">
-        <button className={styles.close} onClick={onClose} aria-label="Fermer">✕</button>
+    <div className={styles.overlay} onClick={(e) => e.target === e.currentTarget && handleClose()}>
+      <div
+        ref={modalRef}
+        className={styles.modal}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="waitlist-dialog-title"
+      >
+        <button ref={closeBtnRef} className={styles.close} onClick={handleClose} aria-label="Fermer">✕</button>
 
         {step === 'form' ? (
           <>
             <p className={styles.eyebrow}>✦ Liste d&apos;attente</p>
-            <h2 className={styles.title}>{serviceLabel}</h2>
+            <h2 id="waitlist-dialog-title" className={styles.title}>{serviceLabel}</h2>
             <p className={styles.date}>📅 {date}</p>
 
             <form onSubmit={handleSubmit} className={styles.form}>
@@ -85,12 +131,12 @@ export function WaitlistModal({ service, serviceLabel, date, onClose }: Waitlist
           </>
         ) : (
           <div className={styles.thanks}>
-            <div className={styles.thanksIcon}>✓</div>
-            <h2 className={styles.thanksTitle}>Vous êtes sur la liste !</h2>
+            <div className={styles.thanksIcon} aria-hidden="true">✓</div>
+            <h2 id="waitlist-dialog-title" className={styles.thanksTitle}>Vous êtes sur la liste !</h2>
             <p className={styles.thanksMsg}>
               Merci <strong>{form.name}</strong> — nous vous contacterons à <strong>{form.email}</strong> dès que les places seront disponibles pour {date}.
             </p>
-            <button className={styles.submit} onClick={onClose}>Fermer</button>
+            <button className={styles.submit} onClick={handleClose}>Fermer</button>
           </div>
         )}
       </div>

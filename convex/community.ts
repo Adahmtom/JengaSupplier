@@ -34,6 +34,7 @@ export const listPosts = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, { portalId, limit = 40 }) => {
+    const safeLimit = Math.min(limit, 100)
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) return null
     const user = await getUserByClerkId(ctx, identity.subject)
@@ -49,7 +50,7 @@ export const listPosts = query({
       .query('communityPosts')
       .withIndex('by_portal', (q) => q.eq('portalId', portalId))
       .order('desc')
-      .take(limit)
+      .take(safeLimit)
 
     const visible = isAdmin ? posts : posts.filter((p) => !p.isHidden)
 
@@ -148,7 +149,11 @@ export const toggleReaction = mutation({
     postId: v.id('communityPosts'),
     emoji: v.string(),
   },
+  // emoji validated to allowlist in handler
   handler: async (ctx, { postId, emoji }) => {
+    const ALLOWED_EMOJI = new Set(['🔥', '❤️', '👏', '💯', '😂'])
+    if (!ALLOWED_EMOJI.has(emoji)) throw new Error('Invalid emoji')
+
     const user = await requireMember(ctx)
 
     const existing = await ctx.db
@@ -172,6 +177,8 @@ export const reportPost = mutation({
     reason: v.string(),
   },
   handler: async (ctx, { postId, reason }) => {
+    if (reason.length > 500) throw new Error('Reason too long (max 500 characters)')
+
     const user = await requireMember(ctx)
 
     const already = await ctx.db

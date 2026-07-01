@@ -1,19 +1,21 @@
 'use client'
 
 import { use, useState, useRef } from 'react'
+import Image from 'next/image'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../../../convex/_generated/api'
 import { Id } from '../../../../../convex/_generated/dataModel'
 import styles from './community.module.css'
 
 const EMOJIS = ['🔥', '❤️', '👏', '💯', '😂']
+const POSTS_PER_PAGE = 40
 
 export default function CommunityPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params)
   const portals = useQuery(api.portals.listPortals)
   const portal = portals?.find((p) => p.slug === slug)
 
-  const [limit, setLimit] = useState(40)
+  const [limit, setLimit] = useState(POSTS_PER_PAGE)
   const posts = useQuery(
     api.community.listPosts,
     portal ? { portalId: portal._id, limit } : 'skip',
@@ -21,21 +23,40 @@ export default function CommunityPage({ params }: { params: Promise<{ slug: stri
 
   if (!portal) return <div className={styles.loading}>Chargement…</div>
 
+  // null = unauthenticated or no subscription
+  if (posts === null) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.empty}>
+          <span className={styles.emptyIcon}>🔒</span>
+          <p>Un abonnement actif est requis pour accéder à la communauté.</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className={styles.page}>
       <header className={styles.header}>
         <div>
           <h1 className={styles.title}>{portal.emoji} {portal.name}</h1>
-          <p className={styles.subtitle}>Communauté · {posts?.length ?? '…'} publications</p>
+          <p className={styles.subtitle}>
+            Communauté · {posts !== undefined ? `${posts.length} publications` : '…'}
+          </p>
         </div>
       </header>
 
       <Composer portalId={portal._id} />
 
-      <section className={styles.feed}>
+      <section
+        className={styles.feed}
+        aria-label="Publications"
+        aria-busy={posts === undefined}
+      >
         {posts === undefined && (
           <>
-            {[1, 2, 3].map((i) => <PostSkeleton key={i} />)}
+            {[1, 2, 3].map((i) => <PostSkeleton key={`skeleton-${i}`} />)}
+            <p className="sr-only" role="status">Chargement des publications…</p>
           </>
         )}
         {posts?.length === 0 && (
@@ -48,7 +69,7 @@ export default function CommunityPage({ params }: { params: Promise<{ slug: stri
           <PostCard key={post._id} post={post} />
         ))}
         {posts && posts.length >= limit && (
-          <button className={styles.loadMore} onClick={() => setLimit(l => l + 40)}>
+          <button className={styles.loadMore} onClick={() => setLimit(l => l + POSTS_PER_PAGE)}>
             Voir plus de publications
           </button>
         )}
@@ -96,6 +117,7 @@ function Composer({ portalId }: { portalId: Id<'portals'> }) {
           headers: { 'Content-Type': imageFile.type },
           body: imageFile,
         })
+        if (!res.ok) throw new Error(`Échec de l'upload (${res.status})`)
         const { storageId } = await res.json()
         imageStorageId = storageId
       }
@@ -112,7 +134,9 @@ function Composer({ portalId }: { portalId: Id<'portals'> }) {
 
   return (
     <form onSubmit={handleSubmit} className={styles.composer}>
+      <label htmlFor="composer-body" className="sr-only">Votre message</label>
       <textarea
+        id="composer-body"
         ref={textRef}
         className={styles.composerInput}
         placeholder="Partagez votre expérience, posez une question, publiez vos trouvailles…"
@@ -125,12 +149,12 @@ function Composer({ portalId }: { portalId: Id<'portals'> }) {
       {imagePreview && (
         <div className={styles.previewWrap}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={imagePreview} alt="Aperçu" className={styles.previewImg} />
+          <img src={imagePreview} alt="Aperçu de l'image à publier" className={styles.previewImg} />
           <button type="button" className={styles.previewRemove} onClick={removeImage} aria-label="Supprimer l'image">✕</button>
         </div>
       )}
 
-      {error && <p className={styles.composerError}>{error}</p>}
+      {error && <p className={styles.composerError} role="alert">{error}</p>}
 
       <div className={styles.composerActions}>
         <button
@@ -148,7 +172,7 @@ function Composer({ portalId }: { portalId: Id<'portals'> }) {
           style={{ display: 'none' }}
           onChange={(e) => { const f = e.target.files?.[0]; if (f) pickImage(f) }}
         />
-        <span className={styles.charCount}>{body.length}/2000</span>
+        <span className={styles.charCount} aria-hidden="true">{body.length}/2000</span>
         <button
           type="submit"
           className={styles.sendBtn}
@@ -163,7 +187,7 @@ function Composer({ portalId }: { portalId: Id<'portals'> }) {
 
 // ── Post card ─────────────────────────────────────────────────────────────────
 
-type Post = NonNullable<ReturnType<typeof useQuery<typeof api.community.listPosts>>>[number]
+type Post = NonNullable<NonNullable<ReturnType<typeof useQuery<typeof api.community.listPosts>>>[number]>
 
 function PostCard({ post }: { post: Post }) {
   const toggleReaction = useMutation(api.community.toggleReaction)
@@ -173,41 +197,58 @@ function PostCard({ post }: { post: Post }) {
 
   const [showReport, setShowReport] = useState(false)
   const [reportReason, setReportReason] = useState('')
+  const [actionError, setActionError] = useState('')
 
   const timeAgo = formatTimeAgo(post._creationTime)
 
   async function handleDelete() {
     if (!confirm('Supprimer cette publication ?')) return
-    await deletePost({ postId: post._id })
+    try {
+      await deletePost({ postId: post._id })
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Erreur lors de la suppression.')
+    }
   }
 
   async function handleHide() {
-    await hidePost({ postId: post._id, reason: 'Contenu inapproprié' })
+    try {
+      await hidePost({ postId: post._id, reason: 'Contenu inapproprié' })
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Erreur lors du masquage.')
+    }
   }
 
   async function handleReport() {
     if (!reportReason.trim()) return
-    await reportPost({ postId: post._id, reason: reportReason })
-    setShowReport(false)
-    setReportReason('')
+    try {
+      await reportPost({ postId: post._id, reason: reportReason })
+      setShowReport(false)
+      setReportReason('')
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Erreur lors du signalement.')
+    }
   }
+
+  const authorName = post.author.name ?? 'Membre'
 
   return (
     <article className={`${styles.post} ${post.isHidden ? styles.postHidden : ''}`}>
+      <h2 className="sr-only">{`Publication de ${authorName}, ${timeAgo}`}</h2>
+
       {post.isHidden && post.viewerIsAdmin && (
         <div className={styles.hiddenBadge}>🚫 Masqué par un admin</div>
       )}
 
       <header className={styles.postHeader}>
-        <div className={styles.avatar}>
+        <div className={styles.avatar} aria-hidden="true">
           {post.author.imageUrl
-            ? <img src={post.author.imageUrl} alt={post.author.name ?? ''} className={styles.avatarImg} />
-            : <span className={styles.avatarFallback}>{(post.author.name ?? '?')[0].toUpperCase()}</span>
+            ? <Image src={post.author.imageUrl} alt="" width={36} height={36} className={styles.avatarImg} unoptimized />
+            : <span className={styles.avatarFallback}>{authorName[0].toUpperCase()}</span>
           }
         </div>
         <div className={styles.postMeta}>
           <span className={styles.postAuthor}>
-            {post.author.name ?? 'Membre'}
+            {authorName}
             {post.author.role && post.author.role !== 'member' && (
               <span className={styles.roleBadge}>
                 {post.author.role === 'super_admin' ? '⭐ Jenga' : post.author.role === 'admin' ? '🛡 Admin' : '🔰 Modo'}
@@ -218,23 +259,44 @@ function PostCard({ post }: { post: Post }) {
         </div>
         <div className={styles.postActions}>
           {(post.isOwn || post.viewerIsAdmin) && (
-            <button className={styles.actionBtn} onClick={handleDelete} title="Supprimer">🗑</button>
+            <button
+              className={styles.actionBtn}
+              onClick={handleDelete}
+              aria-label="Supprimer la publication"
+            >🗑</button>
           )}
           {post.viewerIsAdmin && !post.isHidden && (
-            <button className={styles.actionBtn} onClick={handleHide} title="Masquer">🚫</button>
+            <button
+              className={styles.actionBtn}
+              onClick={handleHide}
+              aria-label="Masquer la publication"
+            >🚫</button>
           )}
           {!post.isOwn && !post.hasReported && (
-            <button className={styles.actionBtn} onClick={() => setShowReport(true)} title="Signaler">⚑</button>
+            <button
+              className={styles.actionBtn}
+              onClick={() => setShowReport(true)}
+              aria-label="Signaler la publication"
+            >⚑</button>
           )}
         </div>
       </header>
+
+      {actionError && <p className={styles.composerError} role="alert">{actionError}</p>}
 
       {post.body && <p className={styles.postBody}>{post.body}</p>}
 
       {post.imageUrl && (
         <div className={styles.postImageWrap}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={post.imageUrl} alt="Publication" className={styles.postImage} loading="lazy" />
+          <Image
+            src={post.imageUrl}
+            alt={post.body ? `Image de ${authorName} : ${post.body.substring(0, 80)}` : `Image publiée par ${authorName}`}
+            className={styles.postImage}
+            width={600}
+            height={400}
+            style={{ width: '100%', height: 'auto' }}
+            unoptimized
+          />
         </div>
       )}
 
@@ -242,13 +304,16 @@ function PostCard({ post }: { post: Post }) {
       <div className={styles.reactions}>
         {EMOJIS.map((emoji) => {
           const r = post.reactions[emoji]
+          const count = r?.count ?? 0
           return (
             <button
               key={emoji}
               className={`${styles.reactionBtn} ${r?.hasReacted ? styles.reactionActive : ''}`}
               onClick={() => toggleReaction({ postId: post._id, emoji })}
+              aria-label={`${emoji} ${count} réaction${count !== 1 ? 's' : ''}`}
+              aria-pressed={r?.hasReacted ?? false}
             >
-              {emoji} {r?.count ? <span>{r.count}</span> : null}
+              {emoji} {count > 0 && <span aria-hidden="true">{count}</span>}
             </button>
           )
         })}
@@ -258,7 +323,11 @@ function PostCard({ post }: { post: Post }) {
       {/* Report form */}
       {showReport && (
         <div className={styles.reportForm}>
+          <label htmlFor={`report-reason-${post._id}`} className="sr-only">
+            Raison du signalement
+          </label>
           <select
+            id={`report-reason-${post._id}`}
             className={styles.reportSelect}
             value={reportReason}
             onChange={(e) => setReportReason(e.target.value)}
@@ -285,7 +354,7 @@ function PostCard({ post }: { post: Post }) {
 
 function PostSkeleton() {
   return (
-    <div className={styles.post}>
+    <div className={styles.post} aria-hidden="true">
       <div className={styles.skeletonHeader} />
       <div className={styles.skeletonLine} />
       <div className={styles.skeletonLineShort} />

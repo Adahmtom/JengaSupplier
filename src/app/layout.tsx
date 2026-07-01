@@ -27,6 +27,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           />
         </head>
         <body>
+          <a href="#main-content" className="sr-only focus:not-sr-only skip-link">
+            Aller au contenu principal
+          </a>
           <ConvexClientProvider>
             <ThemeProvider>
               <LangProvider>

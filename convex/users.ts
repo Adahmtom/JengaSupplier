@@ -1,10 +1,10 @@
-import { internalMutation, mutation, query } from './_generated/server'
+import { internalMutation, internalQuery, mutation, query } from './_generated/server'
 import { internal } from './_generated/api'
 import { v } from 'convex/values'
 import { requirePermission, requireSuperAdmin, softPermission } from './_helpers'
 import { roleValidator } from './schema'
 
-export const upsertUser = mutation({
+export const upsertUser = internalMutation({
   args: {
     clerkId: v.string(),
     email: v.string(),
@@ -42,7 +42,7 @@ export const getMe = query({
   },
 })
 
-export const getUserByClerkId = query({
+export const getUserByClerkId = internalQuery({
   args: { clerkId: v.string() },
   handler: async (ctx, { clerkId }) => {
     return ctx.db
