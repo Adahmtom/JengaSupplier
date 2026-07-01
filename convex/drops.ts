@@ -36,17 +36,38 @@ export const listDrops = query({
       return b._creationTime - a._creationTime
     })
 
-    return Promise.all(
-      filtered.map(async (drop) => {
-        const [likeCount, userLike, commentCount, imageUrl] = await Promise.all([
-          ctx.db.query('likes').withIndex('by_drop', (q) => q.eq('dropId', drop._id)).collect().then((l) => l.length),
-          ctx.db.query('likes').withIndex('by_drop_user', (q) => q.eq('dropId', drop._id).eq('userId', user._id)).unique(),
-          ctx.db.query('comments').withIndex('by_drop', (q) => q.eq('dropId', drop._id)).collect().then((c) => c.length),
-          drop.imageStorageId ? ctx.storage.getUrl(drop.imageStorageId) : null,
-        ])
-        return { ...drop, likeCount, isLiked: !!userLike, commentCount, imageUrl }
-      }),
-    )
+    if (filtered.length === 0) return []
+
+    // Batch: fetch all likes and comments for these drops in 2 queries instead of N*4
+    const dropIds = new Set(filtered.map((d) => d._id))
+
+    const [allLikes, allComments, imageUrls] = await Promise.all([
+      ctx.db.query('likes').collect().then((ls) => ls.filter((l) => dropIds.has(l.dropId))),
+      ctx.db.query('comments').collect().then((cs) => cs.filter((c) => dropIds.has(c.dropId))),
+      Promise.all(
+        filtered.map((d) => d.imageStorageId ? ctx.storage.getUrl(d.imageStorageId) : Promise.resolve(null))
+      ),
+    ])
+
+    const likesByDrop = new Map<string, number>()
+    const likedByUser = new Set<string>()
+    for (const like of allLikes) {
+      likesByDrop.set(like.dropId, (likesByDrop.get(like.dropId) ?? 0) + 1)
+      if (like.userId === user._id) likedByUser.add(like.dropId)
+    }
+
+    const commentsByDrop = new Map<string, number>()
+    for (const comment of allComments) {
+      commentsByDrop.set(comment.dropId, (commentsByDrop.get(comment.dropId) ?? 0) + 1)
+    }
+
+    return filtered.map((drop, i) => ({
+      ...drop,
+      likeCount: likesByDrop.get(drop._id) ?? 0,
+      isLiked: likedByUser.has(drop._id),
+      commentCount: commentsByDrop.get(drop._id) ?? 0,
+      imageUrl: imageUrls[i],
+    }))
   },
 })
 

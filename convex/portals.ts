@@ -16,6 +16,18 @@ export const listPortals = query({
   },
 })
 
+export const getPortalBySlug = query({
+  args: { slug: v.string() },
+  handler: async (ctx, { slug }) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) return null
+    return ctx.db
+      .query('portals')
+      .filter((q) => q.eq(q.field('slug'), slug))
+      .first()
+  },
+})
+
 export const listPortalsAdmin = query({
   args: {},
   handler: async (ctx) => {

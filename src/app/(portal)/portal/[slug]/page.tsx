@@ -10,8 +10,7 @@ import portalStyles from './portal.module.css'
 
 export default function PortalPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params)
-  const portals = useQuery(api.portals.listPortals)
-  const portal = portals?.find((p) => p.slug === slug)
+  const portal = useQuery(api.portals.getPortalBySlug, { slug })
 
   const drops = useQuery(
     api.drops.listDrops,
