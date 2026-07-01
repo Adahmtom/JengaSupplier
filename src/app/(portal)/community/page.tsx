@@ -96,7 +96,7 @@ function Composer() {
     setSending(true)
     setError('')
     try {
-      let imageStorageId: string | undefined
+      let imageStorageId: import('convex/values').GenericId<'_storage'> | undefined
       if (imageFile) {
         const url = await generateUrl()
         const res = await fetch(url, {
@@ -107,6 +107,7 @@ function Composer() {
         if (!res.ok) throw new Error(`Échec de l'upload (${res.status})`)
         const { storageId } = await res.json()
         imageStorageId = storageId as import('convex/values').GenericId<'_storage'>
+
       }
       await sendPost({ body, imageStorageId })
       setBody('')
