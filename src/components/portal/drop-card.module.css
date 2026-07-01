@@ -174,7 +174,19 @@
 
 /* Mobile adjustments */
 @media (max-width: 700px) {
-  .body { padding: var(--space-4); }
+  .card { border-radius: var(--radius-lg); }
+  .body { padding: var(--space-4); gap: var(--space-2); }
   .imageWrap { height: 160px; }
-  .text { font-size: 14px; }
+  .title { font-size: 1rem; }
+  .text { font-size: 14px; -webkit-line-clamp: 4; }
+  .contactItem {
+    font-size: 11px;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .contact { gap: var(--space-2); flex-direction: column; }
+  .actions { gap: var(--space-2); }
+  .action { padding: 4px 8px; font-size: 11px; }
 }
