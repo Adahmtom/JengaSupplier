@@ -235,3 +235,63 @@ export const deletePost = mutation({
     await ctx.db.delete(postId)
   },
 })
+
+export const listReplies = query({
+  args: { postId: v.id('communityPosts') },
+  handler: async (ctx, { postId }) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) return []
+    const user = await getUserByClerkId(ctx, identity.subject)
+    if (!user) return []
+
+    const replies = await ctx.db
+      .query('communityReplies')
+      .withIndex('by_post', (q) => q.eq('postId', postId))
+      .order('asc')
+      .collect()
+
+    return Promise.all(
+      replies.map(async (reply) => {
+        const author = await ctx.db.get(reply.authorId)
+        return {
+          ...reply,
+          author: {
+            name: author?.name,
+            email: author?.email,
+            imageUrl: author?.imageUrl,
+            role: author?.role,
+          },
+          isOwn: reply.authorId === user._id,
+          viewerIsAdmin: ADMIN_ROLES.has(user.role),
+        }
+      }),
+    )
+  },
+})
+
+export const sendReply = mutation({
+  args: { postId: v.id('communityPosts'), body: v.string() },
+  handler: async (ctx, { postId, body }) => {
+    const user = await requireMember(ctx)
+    const trimmed = body.trim()
+    if (!trimmed) throw new Error('Reply cannot be empty')
+    if (trimmed.length > 1000) throw new Error('Reply too long (max 1000 characters)')
+    if (containsPhone(trimmed)) throw new Error('Phone numbers are not allowed in replies.')
+    return ctx.db.insert('communityReplies', { postId, authorId: user._id, body: trimmed })
+  },
+})
+
+export const deleteReply = mutation({
+  args: { replyId: v.id('communityReplies') },
+  handler: async (ctx, { replyId }) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) throw new Error('Not authenticated')
+    const user = await getUserByClerkId(ctx, identity.subject)
+    const reply = await ctx.db.get(replyId)
+    if (!reply) throw new Error('Reply not found')
+    const isOwner = reply.authorId === user?._id
+    const isAdmin = user && ADMIN_ROLES.has(user.role)
+    if (!isOwner && !isAdmin) throw new Error('Not allowed')
+    await ctx.db.delete(replyId)
+  },
+})

@@ -174,6 +174,7 @@ function PostCard({ post }: { post: Post }) {
   const [showReport, setShowReport] = useState(false)
   const [reportReason, setReportReason] = useState('')
   const [actionError, setActionError] = useState('')
+  const [showReplies, setShowReplies] = useState(false)
 
   const timeAgo = formatTimeAgo(post._creationTime)
 
@@ -266,8 +267,16 @@ function PostCard({ post }: { post: Post }) {
             </button>
           )
         })}
+        <button
+          className={`${styles.reactionBtn} ${showReplies ? styles.reactionActive : ''}`}
+          onClick={() => setShowReplies((v) => !v)}
+          aria-expanded={showReplies}
+        >
+          💬 Reply
+        </button>
         {post.hasReported && <span className={styles.reportedTag}>Signalé</span>}
       </div>
+      {showReplies && <ReplyThread postId={post._id} />}
       {showReport && (
         <div className={styles.reportForm}>
           <select className={styles.reportSelect} value={reportReason} onChange={(e) => setReportReason(e.target.value)}>
@@ -284,6 +293,81 @@ function PostCard({ post }: { post: Post }) {
         </div>
       )}
     </article>
+  )
+}
+
+function ReplyThread({ postId }: { postId: import('../../../../convex/_generated/dataModel').Id<'communityPosts'> }) {
+  const replies = useQuery(api.community.listReplies, { postId })
+  const sendReply = useMutation(api.community.sendReply)
+  const deleteReply = useMutation(api.community.deleteReply)
+  const [body, setBody] = useState('')
+  const [sending, setSending] = useState(false)
+  const [error, setError] = useState('')
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!body.trim()) return
+    setSending(true)
+    setError('')
+    try {
+      await sendReply({ postId, body })
+      setBody('')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error sending reply.')
+    } finally {
+      setSending(false)
+    }
+  }
+
+  return (
+    <div className={styles.replyThread}>
+      {replies === undefined && <p className={styles.replyLoading}>Loading…</p>}
+      {replies && replies.length > 0 && (
+        <div className={styles.replyList}>
+          {replies.map((reply) => {
+            const name = reply.author.name || (reply.author.email ? reply.author.email.split('@')[0] : 'Member')
+            return (
+              <div key={reply._id} className={styles.reply}>
+                <div className={styles.replyAvatar}>
+                  {reply.author.imageUrl
+                    ? <Image src={reply.author.imageUrl} alt="" width={28} height={28} className={styles.replyAvatarImg} unoptimized />
+                    : <span className={styles.replyAvatarFallback}>{name[0].toUpperCase()}</span>
+                  }
+                </div>
+                <div className={styles.replyContent}>
+                  <div className={styles.replyMeta}>
+                    <span className={styles.replyAuthor}>{name}</span>
+                    <span className={styles.replyTime}>{formatTimeAgo(reply._creationTime)}</span>
+                    {(reply.isOwn || reply.viewerIsAdmin) && (
+                      <button
+                        className={styles.replyDelete}
+                        onClick={() => deleteReply({ replyId: reply._id })}
+                        aria-label="Delete reply"
+                      >🗑</button>
+                    )}
+                  </div>
+                  <p className={styles.replyBody}>{reply.body}</p>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+      <form onSubmit={handleSubmit} className={styles.replyForm}>
+        <input
+          className={styles.replyInput}
+          placeholder="Write a reply…"
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+          maxLength={1000}
+          disabled={sending}
+        />
+        <button type="submit" className={styles.replySend} disabled={sending || !body.trim()}>
+          {sending ? '…' : 'Send'}
+        </button>
+      </form>
+      {error && <p className={styles.composerError}>{error}</p>}
+    </div>
   )
 }
 

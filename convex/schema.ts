@@ -122,6 +122,14 @@ export default defineSchema({
     .index('by_portal_hidden', ['portalId', 'isHidden'])
     .index('by_author', ['authorId']),
 
+  communityReplies: defineTable({
+    postId: v.id('communityPosts'),
+    authorId: v.id('users'),
+    body: v.string(),
+  })
+    .index('by_post', ['postId'])
+    .index('by_author', ['authorId']),
+
   communityReactions: defineTable({
     postId: v.id('communityPosts'),
     userId: v.id('users'),
