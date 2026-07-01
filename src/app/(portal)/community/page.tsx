@@ -194,7 +194,7 @@ function PostCard({ post }: { post: Post }) {
     } catch (err) { setActionError(err instanceof Error ? err.message : 'Erreur.') }
   }
 
-  const authorName = post.author.name ?? 'Membre'
+  const authorName = post.author.name || (post.author.email ? post.author.email.split('@')[0] : 'Membre')
 
   return (
     <article className={`${styles.post} ${post.isHidden ? styles.postHidden : ''}`}>

@@ -71,7 +71,7 @@ export const listPosts = query({
 
         return {
           ...post,
-          author: { name: author?.name, imageUrl: author?.imageUrl, role: author?.role },
+          author: { name: author?.name, email: author?.email, imageUrl: author?.imageUrl, role: author?.role },
           reactions: reactionMap,
           imageUrl,
           hasReported: !!userReport,
