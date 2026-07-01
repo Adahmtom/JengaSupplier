@@ -61,18 +61,25 @@ export const listPosts = query({
             .filter((q) => q.eq(q.field('reportedBy'), user._id)).first(),
         ])
 
-        // Group reactions by emoji
-        const reactionMap: Record<string, { count: number; hasReacted: boolean }> = {}
+        // Group reactions as array to avoid emoji field name issue with Convex serialization
+        const reactionTotals = new Map<string, { count: number; hasReacted: boolean }>()
         for (const r of reactions) {
-          if (!reactionMap[r.emoji]) reactionMap[r.emoji] = { count: 0, hasReacted: false }
-          reactionMap[r.emoji].count++
-          if (r.userId === user._id) reactionMap[r.emoji].hasReacted = true
+          const existing = reactionTotals.get(r.emoji) ?? { count: 0, hasReacted: false }
+          reactionTotals.set(r.emoji, {
+            count: existing.count + 1,
+            hasReacted: existing.hasReacted || r.userId === user._id,
+          })
         }
+        const reactionList = Array.from(reactionTotals.entries()).map(([emoji, data]) => ({
+          emoji,
+          count: data.count,
+          hasReacted: data.hasReacted,
+        }))
 
         return {
           ...post,
           author: { name: author?.name, email: author?.email, imageUrl: author?.imageUrl, role: author?.role },
-          reactions: reactionMap,
+          reactions: reactionList,
           imageUrl,
           hasReported: !!userReport,
           isOwn: post.authorId === user._id,

@@ -252,7 +252,7 @@ function PostCard({ post }: { post: Post }) {
       )}
       <div className={styles.reactions}>
         {EMOJIS.map((emoji) => {
-          const r = post.reactions[emoji]
+          const r = post.reactions.find((x) => x.emoji === emoji)
           const count = r?.count ?? 0
           return (
             <button
