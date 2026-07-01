@@ -1,10 +1,12 @@
 'use client'
 
 import { use } from 'react'
+import Link from 'next/link'
 import { useQuery } from 'convex/react'
 import { api } from '../../../../../convex/_generated/api'
 import { DropCard } from '@/components/portal/DropCard'
 import styles from '../../feed/feed.module.css'
+import portalStyles from './portal.module.css'
 
 export default function PortalPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params)
@@ -26,6 +28,17 @@ export default function PortalPage({ params }: { params: Promise<{ slug: string 
           <span className="badge badge-gold">{drops.length} vendor{drops.length !== 1 ? 's' : ''}</span>
         )}
       </header>
+
+      {portal && (
+        <Link href={`/community/${slug}`} className={portalStyles.communityCta}>
+          <span className={portalStyles.communityCtaIcon}>💬</span>
+          <div className={portalStyles.communityCtaText}>
+            <strong>Join the {portal.name} community</strong>
+            <span>Ask questions, share tips, connect with other members</span>
+          </div>
+          <span className={portalStyles.communityCtaArrow}>→</span>
+        </Link>
+      )}
 
       {!drops && (
         <div className={styles.feed}>

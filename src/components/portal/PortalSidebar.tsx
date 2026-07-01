@@ -45,22 +45,14 @@ export function PortalSidebar() {
             <span className={styles.sectionLabel}>{t.portals}</span>
             <ul role="list" className={styles.navList}>
               {portals?.map((portal) => (
-                <li key={portal._id} className={styles.portalRow}>
+                <li key={portal._id}>
                   <Link
                     href={`/portal/${portal.slug}`}
-                    className={`${styles.navItem} ${styles.portalLink} ${isActive(`/portal/${portal.slug}`) ? styles.active : ''}`}
+                    className={`${styles.navItem} ${isActive(`/portal/${portal.slug}`) ? styles.active : ''}`}
                     aria-current={isActive(`/portal/${portal.slug}`) ? 'page' : undefined}
                   >
                     <span className={styles.icon} aria-hidden="true">{portal.emoji}</span>
                     {portal.name}
-                  </Link>
-                  <Link
-                    href={`/community/${portal.slug}`}
-                    className={`${styles.communityBtn} ${pathname === `/community/${portal.slug}` ? styles.communityBtnActive : ''}`}
-                    aria-label={`Communauté ${portal.name}`}
-                    title="Communauté"
-                  >
-                    💬
                   </Link>
                 </li>
               ))}
@@ -143,22 +135,14 @@ export function PortalSidebar() {
                   </Link>
                 </li>
                 {portals?.map((portal) => (
-                  <li key={portal._id} className={styles.sheetPortalRow}>
+                  <li key={portal._id}>
                     <Link
                       href={`/portal/${portal.slug}`}
-                      className={`${styles.sheetItem} ${styles.sheetPortalLink} ${isActive(`/portal/${portal.slug}`) ? styles.sheetItemActive : ''}`}
+                      className={`${styles.sheetItem} ${isActive(`/portal/${portal.slug}`) ? styles.sheetItemActive : ''}`}
                       onClick={() => setSheetOpen(false)}
                     >
                       <span className={styles.sheetIcon}>{portal.emoji}</span>
                       {portal.name}
-                    </Link>
-                    <Link
-                      href={`/community/${portal.slug}`}
-                      className={`${styles.sheetCommunityBtn} ${pathname === `/community/${portal.slug}` ? styles.sheetCommunityBtnActive : ''}`}
-                      onClick={() => setSheetOpen(false)}
-                      aria-label={`Communauté ${portal.name}`}
-                    >
-                      💬
                     </Link>
                   </li>
                 ))}
