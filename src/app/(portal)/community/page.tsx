@@ -13,12 +13,11 @@ export default function CommunityPage() {
   const [limit, setLimit] = useState(POSTS_PER_PAGE)
   const posts = useQuery(api.community.listPosts, { limit })
 
-  if (posts === null) {
+  if (posts === null || posts === undefined) {
     return (
       <div className={styles.page}>
         <div className={styles.empty}>
-          <span className={styles.emptyIcon}>🔒</span>
-          <p>Un abonnement actif est requis pour accéder à la communauté.</p>
+          <p style={{ color: 'var(--color-text-muted)', fontSize: 14 }}>Chargement…</p>
         </div>
       </div>
     )
