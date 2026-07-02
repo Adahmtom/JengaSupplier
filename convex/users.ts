@@ -1,4 +1,4 @@
-import { internalMutation, internalQuery, mutation, query } from './_generated/server'
+import { internalAction, internalMutation, internalQuery, mutation, query } from './_generated/server'
 import { internal } from './_generated/api'
 import { v } from 'convex/values'
 import { requirePermission, requireSuperAdmin, softPermission } from './_helpers'
@@ -144,6 +144,55 @@ export const setUserRole = mutation({
       severity: 'critical',
       metadata: { previousRole, newRole: role },
     })
+  },
+})
+
+// One-time backfill: pages through all Clerk users and upserts them into Convex.
+// Run from the Convex dashboard: Functions → users → syncAllClerkUsers → Run
+export const syncAllClerkUsers = internalAction({
+  args: {},
+  handler: async (ctx) => {
+    const secretKey = process.env.CLERK_SECRET_KEY
+    if (!secretKey) throw new Error('CLERK_SECRET_KEY not set in Convex environment')
+
+    let offset = 0
+    const limit = 100
+    let total = 0
+
+    while (true) {
+      const res = await fetch(
+        `https://api.clerk.com/v1/users?limit=${limit}&offset=${offset}`,
+        { headers: { Authorization: `Bearer ${secretKey}` } },
+      )
+      if (!res.ok) throw new Error(`Clerk API error: ${res.status} ${await res.text()}`)
+
+      const users = (await res.json()) as Array<{
+        id: string
+        email_addresses: Array<{ email_address: string; id: string }>
+        primary_email_address_id: string | null
+        first_name: string | null
+        last_name: string | null
+        image_url: string | null
+      }>
+
+      if (users.length === 0) break
+
+      for (const u of users) {
+        const primary = u.email_addresses.find((e) => e.id === u.primary_email_address_id)
+        await ctx.runMutation(internal.users.upsertUser, {
+          clerkId: u.id,
+          email: primary?.email_address ?? '',
+          name: [u.first_name, u.last_name].filter(Boolean).join(' ') || undefined,
+          imageUrl: u.image_url ?? undefined,
+        })
+        total++
+      }
+
+      if (users.length < limit) break
+      offset += limit
+    }
+
+    return { synced: total }
   },
 })
 
