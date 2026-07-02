@@ -32,7 +32,7 @@ export default function JoinPage() {
       }
       // Redirect to Clerk sign-up pre-filled with their email
       const url = new URL('/sign-up', window.location.origin)
-      url.searchParams.set('email', result.email)
+      url.searchParams.set('email', result.email ?? '')
       router.replace(url.toString())
     } catch {
       setLoading(false)
@@ -57,7 +57,7 @@ export default function JoinPage() {
       used: "Ce lien a déjà été utilisé. Connectez-vous ou contactez le support.",
       expired: "Ce lien a expiré. Contactez le support pour en obtenir un nouveau.",
     }
-    return <InviteError message={messages[invite.reason] ?? "Lien invalide."} />
+    return <InviteError message={messages[invite.reason ?? ''] ?? "Lien invalide."} />
   }
 
   return (
