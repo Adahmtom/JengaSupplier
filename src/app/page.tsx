@@ -13,11 +13,111 @@ interface WaitlistEntry {
   date: string
 }
 
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': 'https://jengasuppliers.com/#organization',
+      name: 'Jenga Suppliers',
+      url: 'https://jengasuppliers.com',
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://jengasuppliers.com/logo.svg',
+      },
+      founder: {
+        '@type': 'Person',
+        name: 'Belle Jones',
+      },
+      description: 'La plus grande bibliothèque francophone de fournisseurs vérifiés au monde.',
+      sameAs: [],
+    },
+    {
+      '@type': 'WebSite',
+      '@id': 'https://jengasuppliers.com/#website',
+      url: 'https://jengasuppliers.com',
+      name: 'Jenga Suppliers™',
+      description: 'Accédez à 500+ fournisseurs vérifiés, des weekly drops exclusifs et des guides d\'importation.',
+      publisher: { '@id': 'https://jengasuppliers.com/#organization' },
+      inLanguage: 'fr-FR',
+    },
+    {
+      '@type': 'Product',
+      name: 'Jenga Suppliers — Abonnement Annuel',
+      description: '500+ fournisseurs vérifiés, weekly drops, guides d\'importation, communauté privée.',
+      brand: { '@type': 'Brand', name: 'Jenga Suppliers' },
+      offers: [
+        {
+          '@type': 'Offer',
+          name: 'Mensuel',
+          price: '29.00',
+          priceCurrency: 'USD',
+          priceValidUntil: '2027-01-01',
+          availability: 'https://schema.org/InStock',
+          url: 'https://jengasuppliers.com/#pricing',
+        },
+        {
+          '@type': 'Offer',
+          name: 'Annuel',
+          price: '299.00',
+          priceCurrency: 'USD',
+          priceValidUntil: '2027-01-01',
+          availability: 'https://schema.org/InStock',
+          url: 'https://jengasuppliers.com/#pricing',
+        },
+      ],
+      review: {
+        '@type': 'Review',
+        reviewBody: 'Cette formation a largement dépassé mes attentes. Je repars avec plus de 90 fournisseurs vérifiés.',
+        author: { '@type': 'Person', name: 'Mariama K.' },
+        reviewRating: {
+          '@type': 'Rating',
+          ratingValue: '5',
+          bestRating: '5',
+        },
+      },
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: [
+        {
+          '@type': 'Question',
+          name: 'Qu\'est-ce que Jenga Suppliers ?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Jenga Suppliers est la plus grande bibliothèque francophone de fournisseurs vérifiés. Elle donne accès à 500+ fournisseurs, des weekly drops, des guides d\'importation et une communauté privée de revendeurs.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'Quel est le prix de l\'abonnement Jenga Suppliers ?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Jenga Suppliers est disponible à $29/mois ou $299/an. Les deux formules donnent accès aux mêmes fonctionnalités : 500+ fournisseurs, mises à jour hebdomadaires, templates et accès communauté.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'Les fournisseurs sont-ils vérifiés ?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Oui. Chaque fournisseur dans la bibliothèque est vérifié par l\'équipe Jenga. Des guides anti-arnaque et des protocoles de sécurité sont également inclus.',
+          },
+        },
+      ],
+    },
+  ],
+}
+
 export default function LandingPage() {
   const [waitlist, setWaitlist] = useState<WaitlistEntry | null>(null)
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Nav />
       <main>
         <Hero />

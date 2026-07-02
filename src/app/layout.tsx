@@ -5,9 +5,63 @@ import { LangProvider } from '@/lib/i18n'
 import { ThemeProvider } from '@/lib/theme'
 import '@/styles/global.css'
 
+const BASE_URL = 'https://jengasuppliers.com'
+
 export const metadata: Metadata = {
-  title: 'Jenga Suppliers™ — Construis ton business à la source',
-  description: 'La plus grande bibliothèque francophone de fournisseurs vérifiés au monde. 500+ fournisseurs, weekly drops, guides d\'importation.',
+  metadataBase: new URL(BASE_URL),
+  title: {
+    default: 'Jenga Suppliers™ — La bibliothèque de fournisseurs vérifiés #1 en francophonie',
+    template: '%s | Jenga Suppliers™',
+  },
+  description: 'Accédez à 500+ fournisseurs vérifiés, des weekly drops exclusifs, des guides d\'importation et une communauté de revendeurs sérieux. La plus grande bibliothèque francophone au monde.',
+  keywords: [
+    'fournisseurs vérifiés',
+    'fournisseurs grossistes',
+    'dropshipping francophone',
+    'import Chine',
+    'revendeurs',
+    'sourcing produits',
+    'bibliothèque fournisseurs',
+    'Jenga Suppliers',
+  ],
+  authors: [{ name: 'Belle Jones', url: BASE_URL }],
+  creator: 'Belle Jones',
+  publisher: 'Jenga Suppliers',
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  alternates: {
+    canonical: BASE_URL,
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'fr_FR',
+    url: BASE_URL,
+    siteName: 'Jenga Suppliers™',
+    title: 'Jenga Suppliers™ — La bibliothèque de fournisseurs vérifiés #1 en francophonie',
+    description: 'Accédez à 500+ fournisseurs vérifiés, des weekly drops exclusifs, des guides d\'importation et une communauté de revendeurs sérieux.',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Jenga Suppliers — Fournisseurs vérifiés pour revendeurs francophones',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Jenga Suppliers™ — Fournisseurs vérifiés pour revendeurs francophones',
+    description: 'Accédez à 500+ fournisseurs vérifiés, des weekly drops exclusifs et des guides d\'importation.',
+    images: ['/og-image.png'],
+  },
   icons: {
     icon: '/favicon.svg',
     shortcut: '/favicon.svg',
