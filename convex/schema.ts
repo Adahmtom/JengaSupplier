@@ -146,6 +146,17 @@ export default defineSchema({
     .index('by_post', ['postId'])
     .index('by_reporter', ['reportedBy']),
 
+  // ── Signup invites ────────────────────────────────────────────────────────
+  signupInvites: defineTable({
+    email: v.string(),
+    stripeCustomerId: v.string(),
+    token: v.string(),
+    expiresAt: v.number(),
+    usedAt: v.optional(v.number()),
+  })
+    .index('by_token', ['token'])
+    .index('by_email', ['email']),
+
   // ── Audit log (SOC2) ───────────────────────────────────────────────────────
   // Immutable by design — no public update or delete mutations exist.
   // Written only via internal.audit.write (server-side only, client-inaccessible).
