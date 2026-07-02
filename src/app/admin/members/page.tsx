@@ -107,20 +107,31 @@ export default function AdminMembersPage() {
                   {search ? 'No results found.' : tab === 'members' ? 'No members yet.' : 'No team members yet.'}
                 </td></tr>
               ) : filtered.map((member) => (
-                <tr key={member._id}>
-                  <td className={styles.tdName}>{member.name ?? '—'}</td>
-                  <td>{member.email}</td>
+                <tr key={member._id} style={member.isOrphaned ? { opacity: 0.7 } : undefined}>
+                  <td className={styles.tdName}>
+                    {member.name ?? '—'}
+                    {member.isOrphaned && (
+                      <span title="Paid on Stripe but never completed sign-up" style={{ marginLeft: 6, fontSize: 10, color: 'var(--color-gold)', border: '1px solid var(--color-gold)', borderRadius: 4, padding: '1px 5px', letterSpacing: '0.05em' }}>
+                        no account
+                      </span>
+                    )}
+                  </td>
+                  <td>{member.isOrphaned ? member.subscription?.stripeCustomerId ?? '—' : member.email}</td>
                   <td>
-                    <select
-                      className={mStyles.roleSelect}
-                      value={member.role}
-                      disabled={updating === member._id}
-                      onChange={(e) => handleRoleChange(member._id, e.target.value as Role)}
-                    >
-                      {ALL_ROLES.map((r) => (
-                        <option key={r} value={r}>{r}</option>
-                      ))}
-                    </select>
+                    {member.isOrphaned ? (
+                      <span style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>—</span>
+                    ) : (
+                      <select
+                        className={mStyles.roleSelect}
+                        value={member.role}
+                        disabled={updating === member._id}
+                        onChange={(e) => handleRoleChange(member._id, e.target.value as Role)}
+                      >
+                        {ALL_ROLES.map((r) => (
+                          <option key={r} value={r}>{r}</option>
+                        ))}
+                      </select>
+                    )}
                   </td>
                   <td>{formatDate(member._creationTime)}</td>
                   {tab === 'members' && (

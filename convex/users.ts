@@ -87,10 +87,32 @@ export const listMembers = query({
     const subs = await ctx.db.query('subscriptions').collect()
     const subByUserId = new Map(subs.map((s) => [s.userId, s]))
 
-    return users.map((u) => ({
+    const knownUserIds = new Set(users.map((u) => u._id))
+
+    // Subscriptions that exist in Convex but have no matching user record
+    // (paid via Stripe but never completed Clerk sign-up)
+    const orphanedSubs = subs.filter((s) => !knownUserIds.has(s.userId))
+
+    const knownMembers = users.map((u) => ({
       ...u,
       subscription: subByUserId.get(u._id) ?? null,
+      isOrphaned: false,
     }))
+
+    // Surface orphaned subscriptions as placeholder rows so admins can see them
+    const orphanedRows = orphanedSubs.map((s) => ({
+      _id: s.userId,
+      _creationTime: s._creationTime,
+      clerkId: '',
+      email: `stripe:${s.stripeCustomerId}`,
+      name: undefined as string | undefined,
+      imageUrl: undefined as string | undefined,
+      role: 'member' as const,
+      subscription: s,
+      isOrphaned: true,
+    }))
+
+    return [...knownMembers, ...orphanedRows]
   },
 })
 
