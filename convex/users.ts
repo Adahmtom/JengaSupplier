@@ -196,6 +196,93 @@ export const syncAllClerkUsers = internalAction({
   },
 })
 
+// One-time backfill: pull all Stripe subscriptions and upsert them into Convex.
+// Matches Stripe customers to Convex users by email.
+// Run from the Convex dashboard: Functions → users → syncAllStripeSubscriptions → Run
+export const syncAllStripeSubscriptions = internalAction({
+  args: {},
+  handler: async (ctx) => {
+    const stripeKey = process.env.STRIPE_SECRET_KEY
+    if (!stripeKey) throw new Error('STRIPE_SECRET_KEY not set in Convex environment')
+
+    // Fetch all Convex users to build email → _id map
+    const convexUsers: Array<{ _id: string; email: string }> = await ctx.runQuery(
+      internal.users.listAllForSync,
+    )
+    const byEmail = new Map(convexUsers.map((u) => [u.email.toLowerCase(), u._id]))
+
+    let synced = 0
+    let skipped = 0
+    let startingAfter: string | undefined
+
+    while (true) {
+      const params = new URLSearchParams({ limit: '100', expand: ['data.customer'] as any })
+      if (startingAfter) params.set('starting_after', startingAfter)
+
+      const res = await fetch(`https://api.stripe.com/v1/subscriptions?${params}`, {
+        headers: { Authorization: `Bearer ${stripeKey}` },
+      })
+      if (!res.ok) throw new Error(`Stripe API error: ${res.status} ${await res.text()}`)
+
+      const data = (await res.json()) as {
+        data: Array<{
+          id: string
+          status: string
+          customer: string | { id: string; email: string | null }
+          items: { data: Array<{ price: { id: string } }> }
+          current_period_end: number
+          cancel_at_period_end: boolean
+        }>
+        has_more: boolean
+      }
+
+      for (const sub of data.data) {
+        const customerId = typeof sub.customer === 'string' ? sub.customer : sub.customer.id
+        const customerEmail = typeof sub.customer === 'object' ? sub.customer.email : null
+
+        // Try to find Convex user by email first, then fall back to fetching customer from Stripe
+        let convexUserId = customerEmail ? byEmail.get(customerEmail.toLowerCase()) : undefined
+
+        if (!convexUserId && typeof sub.customer === 'string') {
+          const custRes = await fetch(`https://api.stripe.com/v1/customers/${customerId}`, {
+            headers: { Authorization: `Bearer ${stripeKey}` },
+          })
+          if (custRes.ok) {
+            const cust = (await custRes.json()) as { email: string | null }
+            if (cust.email) convexUserId = byEmail.get(cust.email.toLowerCase())
+          }
+        }
+
+        if (!convexUserId) { skipped++; continue }
+
+        const priceId = sub.items.data[0]?.price?.id ?? ''
+        const status = sub.status as 'active' | 'trialing' | 'past_due' | 'canceled' | 'incomplete' | 'incomplete_expired' | 'unpaid' | 'paused'
+
+        await ctx.runMutation(internal.subscriptions.upsertSubscription, {
+          userId: convexUserId as any,
+          stripeCustomerId: customerId,
+          stripeSubscriptionId: sub.id,
+          stripePriceId: priceId,
+          status,
+          currentPeriodEnd: sub.current_period_end * 1000,
+          cancelAtPeriodEnd: sub.cancel_at_period_end,
+        })
+        synced++
+      }
+
+      if (!data.has_more) break
+      startingAfter = data.data[data.data.length - 1]?.id
+    }
+
+    return { synced, skipped }
+  },
+})
+
+export const listAllForSync = internalQuery({
+  args: {},
+  handler: async (ctx) => ctx.db.query('users').collect(),
+})
+
 // Internal-only: set super_admin by email, no auth required (used by HTTP bootstrap endpoint)
 export const bootstrapAdmin = internalMutation({
   args: { email: v.string() },
