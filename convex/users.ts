@@ -216,7 +216,7 @@ export const syncAllStripeSubscriptions = internalAction({
     let startingAfter: string | undefined
 
     while (true) {
-      const params = new URLSearchParams({ limit: '100', expand: ['data.customer'] as any })
+      const params = new URLSearchParams({ limit: '100', 'expand[]': 'data.customer' })
       if (startingAfter) params.set('starting_after', startingAfter)
 
       const res = await fetch(`https://api.stripe.com/v1/subscriptions?${params}`, {
