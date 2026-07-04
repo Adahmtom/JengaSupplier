@@ -48,9 +48,13 @@ export function DropCard({ drop, portalName }: DropCardProps) {
           <video
             src={drop.videoUrl}
             controls
+            controlsList="nodownload nofullscreen"
+            disablePictureInPicture
             preload="metadata"
+            playsInline
             className={styles.video}
             aria-label={`Vidéo entrepôt — ${drop.title}`}
+            onContextMenu={(e) => e.preventDefault()}
           />
         </div>
       ) : drop.imageUrl ? (

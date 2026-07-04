@@ -218,7 +218,8 @@ function ManualForm() {
             <input
               id="video"
               type="file"
-              accept="video/mp4,video/webm,video/mov,video/quicktime"
+              accept="video/*"
+              capture="environment"
               onChange={(e) => setVideoFile(e.target.files?.[0] ?? null)}
               className={styles.fileInput}
             />
@@ -226,8 +227,8 @@ function ManualForm() {
               <p className={styles.fileName}>🎥 {videoFile.name}</p>
             ) : (
               <>
-                <p className={styles.uploadHint}>Drag warehouse video here or click</p>
-                <p className={styles.uploadHintSub}>MP4 / WebM / MOV</p>
+                <p className={styles.uploadHint}>Tap to record or pick from gallery</p>
+                <p className={styles.uploadHintSub}>MP4 / MOV / WebM — mobile & desktop</p>
               </>
             )}
           </div>
