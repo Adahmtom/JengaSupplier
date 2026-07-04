@@ -3,17 +3,23 @@
 import { useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import { DropCard } from '@/components/portal/DropCard'
+import { useLang } from '@/lib/i18n'
 import styles from '../feed/feed.module.css'
 
-export default function AlertsPage() {
+export default function WarehouseVideosPage() {
   const drops = useQuery(api.drops.listDrops, { alertsOnly: true })
+  const { lang } = useLang()
 
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        <h1 className={styles.title}>Scam Alerts</h1>
+        <h1 className={styles.title}>
+          {lang === 'fr' ? 'Vidéos Entrepôts' : 'Warehouse Videos'}
+        </h1>
         {drops && (
-          <span className="badge badge-alert">⚠ {drops.length} active</span>
+          <span className="badge badge-gold" style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+            🎥 {drops.length} {lang === 'fr' ? 'vidéo' : 'video'}{drops.length !== 1 ? 's' : ''}
+          </span>
         )}
       </header>
 
@@ -27,14 +33,18 @@ export default function AlertsPage() {
 
       {drops?.length === 0 && (
         <div className={styles.empty}>
-          <p>No scam alerts at the moment. Stay safe out there.</p>
+          <p>
+            {lang === 'fr'
+              ? 'Aucune vidéo d\'entrepôt pour l\'instant. Revenez bientôt.'
+              : 'No warehouse videos yet. Check back soon.'}
+          </p>
         </div>
       )}
 
       {drops && drops.length > 0 && (
         <div className={styles.feed}>
           {drops.map((drop) => (
-            <DropCard key={drop._id} drop={drop} portalName="Scam Alert" />
+            <DropCard key={drop._id} drop={drop} portalName="Warehouse Video" />
           ))}
         </div>
       )}

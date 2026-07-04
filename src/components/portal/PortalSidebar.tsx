@@ -46,7 +46,7 @@ export function PortalSidebar() {
             <span className={styles.sectionLabel}>{t.main}</span>
             <ul role="list" className={styles.navList}>
               <SidebarItem href="/feed"      icon="✦" label={t.dailyFeed}  active={isActive('/feed')} />
-              <SidebarItem href="/alerts"    icon="⚠" label={t.scamAlerts} active={isActive('/alerts')} />
+              <SidebarItem href="/alerts"    icon="🎥" label={t.scamAlerts} active={isActive('/alerts')} />
               <SidebarItem href="/community" icon="💬" label={lang === 'fr' ? 'Communauté' : 'Community'} active={isActive('/community')} />
             </ul>
 
@@ -138,7 +138,7 @@ export function PortalSidebar() {
                 </li>
                 <li>
                   <Link href="/alerts" className={`${styles.sheetItem} ${isActive('/alerts') ? styles.sheetItemActive : ''}`} onClick={() => setSheetOpen(false)}>
-                    <span className={styles.sheetIcon}>⚠</span>
+                    <span className={styles.sheetIcon}>🎥</span>
                     {t.scamAlerts}
                   </Link>
                 </li>
@@ -195,8 +195,8 @@ export function PortalSidebar() {
             Feed
           </Link>
           <Link href="/alerts" className={`${styles.mobileNavItem} ${isActive('/alerts') ? styles.mobileActive : ''}`}>
-            <span className={styles.mobileIcon}>⚠</span>
-            Alertes
+            <span className={styles.mobileIcon}>🎥</span>
+            {lang === 'fr' ? 'Entrepôts' : 'Warehouse'}
           </Link>
           <button
             className={`${styles.mobileNavItem} ${sheetOpen || pathname.startsWith('/portal') ? styles.mobileActive : ''}`}

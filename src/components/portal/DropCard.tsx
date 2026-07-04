@@ -15,10 +15,12 @@ type Drop = {
   email?: string | null
   isAlert: boolean
   isPinned: boolean
+  isVerified?: boolean | null
   likeCount: number
   isLiked: boolean
   commentCount: number
   imageUrl: string | null
+  videoUrl?: string | null
   portalId: Id<'portals'>
   _creationTime: number
 }
@@ -40,7 +42,18 @@ export function DropCard({ drop, portalName }: DropCardProps) {
       className={`${styles.card} ${drop.isAlert ? styles.alertCard : ''} ${drop.isPinned ? styles.pinnedCard : ''}`}
       aria-label={drop.title}
     >
-      {drop.imageUrl && (
+      {/* Video takes priority over image when both exist */}
+      {drop.videoUrl ? (
+        <div className={styles.videoWrap}>
+          <video
+            src={drop.videoUrl}
+            controls
+            preload="metadata"
+            className={styles.video}
+            aria-label={`Vidéo entrepôt — ${drop.title}`}
+          />
+        </div>
+      ) : drop.imageUrl ? (
         <div className={styles.imageWrap}>
           <Image
             src={drop.imageUrl}
@@ -50,12 +63,12 @@ export function DropCard({ drop, portalName }: DropCardProps) {
             sizes="(max-width: 768px) 100vw, 600px"
           />
         </div>
-      )}
+      ) : null}
 
       <div className={styles.body}>
         <div className={styles.tag}>
           {drop.isAlert ? (
-            <span className="badge badge-alert">⚠ Scam Alert</span>
+            <span className="badge badge-alert">🎥 Warehouse Video</span>
           ) : (
             <span className={styles.portal}>✦ {portalName}</span>
           )}
@@ -65,6 +78,11 @@ export function DropCard({ drop, portalName }: DropCardProps) {
         </div>
 
         <h2 className={`${styles.title} ${drop.isAlert ? styles.alertTitle : ''}`}>
+          {drop.isVerified && (
+            <span className={styles.verifiedBadge} title="Fournisseur vérifié par Jenga" aria-label="Vérifié">
+              ✓
+            </span>
+          )}
           {drop.title}
         </h2>
 

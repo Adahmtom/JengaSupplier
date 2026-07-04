@@ -13,7 +13,7 @@ const translations = {
 
     // Sidebar
     dailyFeed:    'Fil des fournisseurs',
-    scamAlerts:   'Alertes arnaques',
+    scamAlerts:   'Vidéos Entrepôts',
     portals:      'Catégories',
     main:         'Principal',
     myAccount:    'Mon compte',
@@ -89,7 +89,7 @@ const translations = {
 
     // Sidebar
     dailyFeed:    'Supplier Feed',
-    scamAlerts:   'Scam Alerts',
+    scamAlerts:   'Warehouse Videos',
     portals:      'Categories',
     main:         'Main',
     myAccount:    'My Account',

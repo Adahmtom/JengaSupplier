@@ -76,6 +76,7 @@ export default defineSchema({
     phone: v.optional(v.string()),
     email: v.optional(v.string()),
     imageStorageId: v.optional(v.id('_storage')),
+    videoStorageId: v.optional(v.id('_storage')),
     authorId: v.id('users'),
     isPinned: v.boolean(),
     isAlert: v.boolean(),

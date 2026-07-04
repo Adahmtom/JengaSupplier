@@ -41,11 +41,14 @@ export const listDrops = query({
     // Batch: fetch all likes and comments for these drops in 2 queries instead of N*4
     const dropIds = new Set(filtered.map((d) => d._id))
 
-    const [allLikes, allComments, imageUrls] = await Promise.all([
+    const [allLikes, allComments, imageUrls, videoUrls] = await Promise.all([
       ctx.db.query('likes').collect().then((ls) => ls.filter((l) => dropIds.has(l.dropId))),
       ctx.db.query('comments').collect().then((cs) => cs.filter((c) => dropIds.has(c.dropId))),
       Promise.all(
         filtered.map((d) => d.imageStorageId ? ctx.storage.getUrl(d.imageStorageId) : Promise.resolve(null))
+      ),
+      Promise.all(
+        filtered.map((d) => d.videoStorageId ? ctx.storage.getUrl(d.videoStorageId) : Promise.resolve(null))
       ),
     ])
 
@@ -67,6 +70,7 @@ export const listDrops = query({
       isLiked: likedByUser.has(drop._id),
       commentCount: commentsByDrop.get(drop._id) ?? 0,
       imageUrl: imageUrls[i],
+      videoUrl: videoUrls[i],
     }))
   },
 })
@@ -90,11 +94,12 @@ export const getDrop = query({
     const drop = await ctx.db.get(dropId)
     if (!drop || !drop.isPublished) return null
 
-    const [likes, userLike, comments, imageUrl] = await Promise.all([
+    const [likes, userLike, comments, imageUrl, videoUrl] = await Promise.all([
       ctx.db.query('likes').withIndex('by_drop', (q) => q.eq('dropId', dropId)).collect(),
       ctx.db.query('likes').withIndex('by_drop_user', (q) => q.eq('dropId', dropId).eq('userId', user._id)).unique(),
       ctx.db.query('comments').withIndex('by_drop', (q) => q.eq('dropId', dropId)).collect(),
       drop.imageStorageId ? ctx.storage.getUrl(drop.imageStorageId) : null,
+      drop.videoStorageId ? ctx.storage.getUrl(drop.videoStorageId) : null,
     ])
 
     const commentsWithUsers = await Promise.all(
@@ -104,7 +109,7 @@ export const getDrop = query({
       }),
     )
 
-    return { ...drop, likeCount: likes.length, isLiked: !!userLike, comments: commentsWithUsers, imageUrl }
+    return { ...drop, likeCount: likes.length, isLiked: !!userLike, comments: commentsWithUsers, imageUrl, videoUrl }
   },
 })
 
@@ -116,6 +121,7 @@ export const createDrop = mutation({
     phone: v.optional(v.string()),
     email: v.optional(v.string()),
     imageStorageId: v.optional(v.id('_storage')),
+    videoStorageId: v.optional(v.id('_storage')),
     isPinned: v.optional(v.boolean()),
     isAlert: v.optional(v.boolean()),
     isVerified: v.optional(v.boolean()),
