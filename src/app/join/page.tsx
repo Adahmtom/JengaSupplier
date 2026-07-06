@@ -1,11 +1,25 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 
 export default function JoinPage() {
+  return (
+    <Suspense fallback={
+      <div style={pageStyle}>
+        <div style={cardStyle}>
+          <p style={{ color: 'var(--color-text-muted)', fontSize: 14 }}>Chargement…</p>
+        </div>
+      </div>
+    }>
+      <JoinContent />
+    </Suspense>
+  )
+}
+
+function JoinContent() {
   const params = useSearchParams()
   const router = useRouter()
   const token = params.get('token') ?? ''
