@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import { DropCard } from '@/components/portal/DropCard'
@@ -8,7 +9,10 @@ import styles from '../feed/feed.module.css'
 
 export default function WarehouseVideosPage() {
   const drops = useQuery(api.drops.listDrops, { alertsOnly: true })
+  const me = useQuery(api.users.getMe)
   const { lang } = useLang()
+
+  const isAdmin = me?.role === 'super_admin' || me?.role === 'admin' || me?.role === 'moderator'
 
   return (
     <div className={styles.page}>
@@ -16,11 +20,22 @@ export default function WarehouseVideosPage() {
         <h1 className={styles.title}>
           {lang === 'fr' ? 'Vidéos Entrepôts' : 'Warehouse Videos'}
         </h1>
-        {drops && (
-          <span className="badge badge-gold" style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-            🎥 {drops.length} {lang === 'fr' ? 'vidéo' : 'video'}{drops.length !== 1 ? 's' : ''}
-          </span>
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+          {drops && (
+            <span className="badge badge-gold" style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+              🎥 {drops.length} {lang === 'fr' ? 'vidéo' : 'video'}{drops.length !== 1 ? 's' : ''}
+            </span>
+          )}
+          {isAdmin && (
+            <Link
+              href="/admin/new"
+              className="btn btn-primary"
+              style={{ fontSize: '0.8rem', padding: '6px 14px', display: 'flex', alignItems: 'center', gap: '6px' }}
+            >
+              🎥 {lang === 'fr' ? 'Ajouter une vidéo' : 'Upload video'}
+            </Link>
+          )}
+        </div>
       </header>
 
       {!drops && (
