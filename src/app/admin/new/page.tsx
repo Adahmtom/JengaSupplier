@@ -62,10 +62,8 @@ function ManualForm() {
   const [email, setEmail] = useState('')
   const [portalId, setPortalId] = useState<Id<'portals'> | ''>('')
   const [isPinned, setIsPinned] = useState(false)
-  const [isAlert, setIsAlert] = useState(false)
   const [isVerified, setIsVerified] = useState(false)
   const [imageFile, setImageFile] = useState<File | null>(null)
-  const [videoFile, setVideoFile] = useState<File | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
 
@@ -90,18 +88,6 @@ function ManualForm() {
         imageStorageId = storageId
       }
 
-      let videoStorageId: Id<'_storage'> | undefined
-      if (videoFile) {
-        const uploadUrl = await generateUploadUrl()
-        const result = await fetch(uploadUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': videoFile.type },
-          body: videoFile,
-        })
-        const { storageId } = await result.json()
-        videoStorageId = storageId
-      }
-
       await createDrop({
         portalId: portalId as Id<'portals'>,
         title: title.trim(),
@@ -109,9 +95,7 @@ function ManualForm() {
         phone: phone.trim() || undefined,
         email: email.trim() || undefined,
         imageStorageId,
-        videoStorageId,
         isPinned,
-        isAlert,
         isVerified,
       })
       router.push('/admin/drops')
@@ -193,51 +177,26 @@ function ManualForm() {
         />
       </div>
 
-      <div className={styles.row}>
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor="image">Image (optional)</label>
-          <div className={styles.uploadZone}>
-            <input
-              id="image"
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
-              className={styles.fileInput}
-            />
-            {imageFile ? (
-              <p className={styles.fileName}>📷 {imageFile.name}</p>
-            ) : (
-              <p className={styles.uploadHint}>Drag photo here or click to upload</p>
-            )}
-          </div>
-        </div>
-
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor="video">Warehouse Video (optional)</label>
-          <div className={styles.uploadZone}>
-            <input
-              id="video"
-              type="file"
-              accept="video/*"
-              capture="environment"
-              onChange={(e) => setVideoFile(e.target.files?.[0] ?? null)}
-              className={styles.fileInput}
-            />
-            {videoFile ? (
-              <p className={styles.fileName}>🎥 {videoFile.name}</p>
-            ) : (
-              <>
-                <p className={styles.uploadHint}>Tap to record or pick from gallery</p>
-                <p className={styles.uploadHintSub}>MP4 / MOV / WebM — mobile & desktop</p>
-              </>
-            )}
-          </div>
+      <div className={styles.field}>
+        <label className={styles.label} htmlFor="image">Image (optional)</label>
+        <div className={styles.uploadZone}>
+          <input
+            id="image"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
+            className={styles.fileInput}
+          />
+          {imageFile ? (
+            <p className={styles.fileName}>📷 {imageFile.name}</p>
+          ) : (
+            <p className={styles.uploadHint}>Drag photo here or click to upload</p>
+          )}
         </div>
       </div>
 
       <div className={styles.toggleRow}>
         <Toggle id="pinned" label="Pin to top of feed" checked={isPinned} onChange={setIsPinned} />
-        <Toggle id="alert" label="🎥 Mark as Warehouse Video" checked={isAlert} onChange={setIsAlert} />
         <Toggle id="verified" label="✓ Verified Vendor" checked={isVerified} onChange={setIsVerified} />
       </div>
 

@@ -28,7 +28,7 @@ export default function WarehouseVideosPage() {
           )}
           {isAdmin && (
             <Link
-              href="/admin/new"
+              href="/admin/warehouse"
               className="btn btn-primary"
               style={{ fontSize: '0.8rem', padding: '6px 14px', display: 'flex', alignItems: 'center', gap: '6px' }}
             >

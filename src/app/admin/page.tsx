@@ -33,7 +33,10 @@ export default function AdminOverviewPage() {
     <div className={styles.page}>
       <div className={styles.pageHeader}>
         <h1 className={styles.title}>Overview</h1>
-        <Link href="/admin/new" className="btn btn-primary" style={{ fontSize: 13 }}>+ New Vendor</Link>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <Link href="/admin/warehouse" className="btn btn-secondary" style={{ fontSize: 13 }}>🎥 Warehouse Video</Link>
+          <Link href="/admin/new" className="btn btn-primary" style={{ fontSize: 13 }}>+ New Vendor</Link>
+        </div>
       </div>
 
       {/* ── Row 1: Core KPIs ── */}
