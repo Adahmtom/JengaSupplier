@@ -1,4 +1,4 @@
-import { internalQuery, mutation, query } from './_generated/server'
+import { internalMutation, internalQuery, mutation, query } from './_generated/server'
 import { internal } from './_generated/api'
 import { v } from 'convex/values'
 import { requireAuth, requirePermission, softPermission } from './_helpers'
@@ -143,6 +143,18 @@ const CATEGORY_LIST = [
   { name: 'Packaging · Emballage',                  slug: 'packaging',        emoji: '🎁', order: 24 },
   { name: 'Général · General',                      slug: 'general',          emoji: '🗂️', order: 25 },
 ]
+
+export const seedPortalsInternal = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const existing = await ctx.db.query('portals').collect()
+    if (existing.length > 0) return `already seeded (${existing.length} categories)`
+    for (const portal of CATEGORY_LIST) {
+      await ctx.db.insert('portals', { ...portal, isActive: true })
+    }
+    return `seeded ${CATEGORY_LIST.length} categories`
+  },
+})
 
 export const seedPortals = mutation({
   args: {},
