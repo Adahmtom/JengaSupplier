@@ -1,7 +1,17 @@
-import { internalAction, internalMutation } from './_generated/server'
+import { internalAction, internalMutation, internalQuery } from './_generated/server'
 import { internal } from './_generated/api'
 import { v } from 'convex/values'
 import { Id } from './_generated/dataModel'
+
+export const findAdmin = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    return ctx.db
+      .query('users')
+      .withIndex('by_role', (q) => q.eq('role', 'super_admin'))
+      .first()
+  },
+})
 
 // Internal helper — insert a drop if one with the same title+portalId doesn't exist yet
 export const insertDrop = internalMutation({
@@ -35,13 +45,13 @@ export const insertDrop = internalMutation({
   },
 })
 
-// Run from Convex dashboard: Functions → seedSuppliers → seedVerifiedSuppliers → Run
+// Run from Convex dashboard: Functions → seedSuppliers → seedVerifiedSuppliers → Run (no args needed)
 export const seedVerifiedSuppliers = internalAction({
-  args: { adminClerkId: v.string() },
-  handler: async (ctx, { adminClerkId }) => {
-    // Resolve the admin user who will be set as author
-    const admin = await ctx.runQuery(internal.users.getUserByClerkId, { clerkId: adminClerkId })
-    if (!admin) throw new Error(`No user found for clerkId: ${adminClerkId}`)
+  args: {},
+  handler: async (ctx) => {
+    // Use the first super_admin as author
+    const admin = await ctx.runQuery(internal.seedSuppliers.findAdmin)
+    if (!admin) throw new Error('No super_admin found — make sure your role is set to super_admin first')
     const authorId = admin._id
 
     // Fetch all portals and build a slug → id map
