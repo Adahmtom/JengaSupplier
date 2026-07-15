@@ -9,6 +9,7 @@ import styles from './admin-sidebar.module.css'
 const NAV = [
   { href: '/admin',           icon: '📊', label: 'Overview' },
   { href: '/admin/new',       icon: '✦',  label: 'New Vendor' },
+  { href: '/admin/warehouse', icon: '🎥', label: 'Warehouse Video' },
   { href: '/admin/drops',     icon: '📁', label: 'All Vendors' },
   { href: '/admin/categories',icon: '🗂', label: 'Categories' },
   { href: '/admin/members',   icon: '👥', label: 'Members' },
