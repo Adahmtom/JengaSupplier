@@ -80,3 +80,11 @@
 }
 
 .roleSelect:disabled { opacity: 0.5; cursor: wait; }
+
+/* ── Mobile ── */
+@media (max-width: 700px) {
+  .header { flex-direction: column; align-items: flex-start; }
+  .tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab { font-size: 12px; padding: 8px 12px; white-space: nowrap; }
+}

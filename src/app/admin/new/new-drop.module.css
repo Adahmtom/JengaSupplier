@@ -213,6 +213,15 @@
 
 .toggleRow { display: flex; gap: var(--space-8); flex-wrap: wrap; }
 
+/* ── Mobile ── */
+@media (max-width: 700px) {
+  .title { font-size: 1.6rem; margin-bottom: var(--space-5); }
+  .form { padding: var(--space-5); gap: var(--space-5); }
+  .row { grid-template-columns: 1fr; }
+  .tabs { gap: var(--space-1); }
+  .toggleRow { gap: var(--space-5); }
+}
+
 .toggle { display: flex; align-items: center; gap: var(--space-3); }
 
 .toggleTrack {

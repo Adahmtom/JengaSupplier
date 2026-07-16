@@ -3,6 +3,8 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: var(--space-8);
+  flex-wrap: wrap;
+  gap: var(--space-3);
 }
 
 .pin { font-size: 11px; }
@@ -41,4 +43,10 @@
 .danger:hover {
   background: var(--color-alert-bg);
   color: var(--color-alert-text);
+}
+
+/* ── Mobile ── */
+@media (max-width: 700px) {
+  .header { margin-bottom: var(--space-5); align-items: flex-start; }
+  .actions { flex-wrap: wrap; }
 }

@@ -9,6 +9,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-4);
 }
 
 .title {
@@ -296,6 +298,22 @@
 .statusActive   { color: var(--color-success); }
 .statusInactive { color: var(--color-text-subtle); }
 .loading { text-align: center; color: var(--color-text-subtle); padding: var(--space-8) !important; }
+
+/* ── Mobile ── */
+@media (max-width: 700px) {
+  .title { font-size: 1.6rem; }
+  .pageHeader { gap: var(--space-3); }
+  .sectionHeader { padding: var(--space-3) var(--space-4); }
+  .subBreakdown { padding: var(--space-3) var(--space-4); }
+  .catBreakdown { padding: var(--space-3) var(--space-4); }
+  .subTotal { padding: var(--space-3) var(--space-4); }
+  .auditRow {
+    grid-template-columns: 12px 1fr;
+    padding: var(--space-2) var(--space-4);
+  }
+  .auditRow > .auditActor { display: none; }
+  .catBarWrap { width: 50px; }
+}
 
 /* ── Audit list ── */
 .auditList {
