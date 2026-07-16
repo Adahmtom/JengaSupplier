@@ -27,5 +27,13 @@
     grid-template-columns: 1fr;
     padding-bottom: 68px;
   }
-  .main { padding: var(--space-4) var(--space-4); }
+  .main {
+    padding: var(--space-4);
+    /* Extra bottom space for safe area above bottom nav */
+    padding-bottom: calc(var(--space-8) + 62px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@media (max-width: 360px) {
+  .main { padding: var(--space-3); }
 }
