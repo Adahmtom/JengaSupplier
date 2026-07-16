@@ -86,7 +86,9 @@ export default defineSchema({
     .index('by_portal', ['portalId'])
     .index('by_alert', ['isAlert'])
     .index('by_pinned', ['isPinned'])
-    .index('by_published', ['isPublished']),
+    .index('by_published', ['isPublished'])
+    .index('by_published_portal', ['isPublished', 'portalId'])
+    .index('by_published_alert', ['isPublished', 'isAlert']),
 
   likes: defineTable({
     dropId: v.id('drops'),

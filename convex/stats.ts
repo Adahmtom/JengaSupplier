@@ -8,10 +8,11 @@ export const adminStats = query({
     const user = await softPermission(ctx, 'members', 'read')
     if (!user) return null
 
+    // Limit each scan — at 1000 users these become expensive without pagination
     const [users, subs, drops, portals] = await Promise.all([
-      ctx.db.query('users').collect(),
-      ctx.db.query('subscriptions').collect(),
-      ctx.db.query('drops').collect(),
+      ctx.db.query('users').take(2000),
+      ctx.db.query('subscriptions').take(2000),
+      ctx.db.query('drops').take(5000),
       ctx.db.query('portals').collect(),
     ])
 

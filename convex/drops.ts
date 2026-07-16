@@ -21,14 +21,24 @@ export const listDrops = query({
       if (!sub) return null
     }
 
-    const all = await ctx.db
-      .query('drops')
-      .filter((q) => q.eq(q.field('isPublished'), true))
-      .collect()
-
-    let filtered = all
-    if (portalId) filtered = filtered.filter((d) => d.portalId === portalId)
-    if (alertsOnly) filtered = filtered.filter((d) => d.isAlert)
+    // Use compound indexes to avoid full table scans
+    let filtered
+    if (alertsOnly) {
+      filtered = await ctx.db
+        .query('drops')
+        .withIndex('by_published_alert', (q) => q.eq('isPublished', true).eq('isAlert', true))
+        .collect()
+    } else if (portalId) {
+      filtered = await ctx.db
+        .query('drops')
+        .withIndex('by_published_portal', (q) => q.eq('isPublished', true).eq('portalId', portalId))
+        .collect()
+    } else {
+      filtered = await ctx.db
+        .query('drops')
+        .withIndex('by_published', (q) => q.eq('isPublished', true))
+        .collect()
+    }
 
     filtered.sort((a, b) => {
       if (a.isPinned && !b.isPinned) return -1
@@ -38,12 +48,20 @@ export const listDrops = query({
 
     if (filtered.length === 0) return []
 
-    // Batch: fetch all likes and comments for these drops in 2 queries instead of N*4
+    // Fetch likes and comments per drop using indexes — no full table scans
     const dropIds = new Set(filtered.map((d) => d._id))
 
     const [allLikes, allComments, imageUrls, videoUrls] = await Promise.all([
-      ctx.db.query('likes').collect().then((ls) => ls.filter((l) => dropIds.has(l.dropId))),
-      ctx.db.query('comments').collect().then((cs) => cs.filter((c) => dropIds.has(c.dropId))),
+      Promise.all(
+        filtered.map((d) =>
+          ctx.db.query('likes').withIndex('by_drop', (q) => q.eq('dropId', d._id)).collect()
+        )
+      ).then((groups) => groups.flat()),
+      Promise.all(
+        filtered.map((d) =>
+          ctx.db.query('comments').withIndex('by_drop', (q) => q.eq('dropId', d._id)).collect()
+        )
+      ).then((groups) => groups.flat()),
       Promise.all(
         filtered.map((d) => d.imageStorageId ? ctx.storage.getUrl(d.imageStorageId) : Promise.resolve(null))
       ),
@@ -102,12 +120,15 @@ export const getDrop = query({
       drop.videoStorageId ? ctx.storage.getUrl(drop.videoStorageId) : null,
     ])
 
-    const commentsWithUsers = await Promise.all(
-      comments.map(async (c) => {
-        const author = await ctx.db.get(c.userId)
-        return { ...c, author: { name: author?.name, imageUrl: author?.imageUrl } }
-      }),
-    )
+    // Batch author lookups — deduplicate user IDs first
+    const authorIds = [...new Set(comments.map((c) => c.userId))]
+    const authors = await Promise.all(authorIds.map((id) => ctx.db.get(id)))
+    const authorMap = new Map(authorIds.map((id, i) => [id, authors[i]]))
+
+    const commentsWithUsers = comments.map((c) => {
+      const author = authorMap.get(c.userId)
+      return { ...c, author: { name: author?.name, imageUrl: author?.imageUrl } }
+    })
 
     return { ...drop, likeCount: likes.length, isLiked: !!userLike, comments: commentsWithUsers, imageUrl, videoUrl }
   },
@@ -256,16 +277,29 @@ export const listAllDropsAdmin = query({
     if (!user) return null
 
     const drops = await ctx.db.query('drops').order('desc').collect()
-    return Promise.all(
-      drops.map(async (drop) => {
-        const [likeCount, commentCount, imageUrl] = await Promise.all([
-          ctx.db.query('likes').withIndex('by_drop', (q) => q.eq('dropId', drop._id)).collect().then((l) => l.length),
-          ctx.db.query('comments').withIndex('by_drop', (q) => q.eq('dropId', drop._id)).collect().then((c) => c.length),
-          drop.imageStorageId ? ctx.storage.getUrl(drop.imageStorageId) : null,
-        ])
-        return { ...drop, likeCount, commentCount, imageUrl }
-      }),
+
+    // Batch all likes and comments in 2 queries total, not N*2
+    const [allLikes, allComments] = await Promise.all([
+      ctx.db.query('likes').collect(),
+      ctx.db.query('comments').collect(),
+    ])
+
+    const likesByDrop = new Map<string, number>()
+    for (const l of allLikes) likesByDrop.set(l.dropId, (likesByDrop.get(l.dropId) ?? 0) + 1)
+
+    const commentsByDrop = new Map<string, number>()
+    for (const c of allComments) commentsByDrop.set(c.dropId, (commentsByDrop.get(c.dropId) ?? 0) + 1)
+
+    const imageUrls = await Promise.all(
+      drops.map((d) => d.imageStorageId ? ctx.storage.getUrl(d.imageStorageId) : Promise.resolve(null))
     )
+
+    return drops.map((drop, i) => ({
+      ...drop,
+      likeCount: likesByDrop.get(drop._id) ?? 0,
+      commentCount: commentsByDrop.get(drop._id) ?? 0,
+      imageUrl: imageUrls[i],
+    }))
   },
 })
 
