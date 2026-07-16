@@ -154,6 +154,14 @@ export default function AdminOverviewPage() {
             <span className={styles.quickIcon}>📋</span>
             <span className={styles.quickLabel}>Audit Log</span>
           </Link>
+          <Link href="/admin/community" className={styles.quickBtn}>
+            <span className={styles.quickIcon}>💬</span>
+            <span className={styles.quickLabel}>Community</span>
+          </Link>
+          <Link href="/admin/waitlist" className={styles.quickBtn}>
+            <span className={styles.quickIcon}>📊</span>
+            <span className={styles.quickLabel}>Waitlist</span>
+          </Link>
           <Link href="/feed" className={styles.quickBtn}>
             <span className={styles.quickIcon}>👁</span>
             <span className={styles.quickLabel}>Member View</span>
