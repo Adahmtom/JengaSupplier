@@ -1,6 +1,7 @@
 import { mutation, query } from './_generated/server'
 import { v } from 'convex/values'
 import { requirePermission } from './_helpers'
+import { rateLimiter } from './lib/rateLimiter'
 
 const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000
 
@@ -44,6 +45,9 @@ export const createInvite = mutation({
 export const redeemInvite = mutation({
   args: { token: v.string() },
   handler: async (ctx, { token }) => {
+    // Rate limit by token string to block brute-force token guessing
+    await rateLimiter.limit(ctx, 'redeemInvite', { key: token, throws: true })
+
     const invite = await ctx.db
       .query('signupInvites')
       .withIndex('by_token', (q) => q.eq('token', token))

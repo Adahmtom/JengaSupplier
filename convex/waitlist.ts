@@ -1,6 +1,7 @@
 import { mutation, query } from './_generated/server'
 import { v } from 'convex/values'
 import { softPermission } from './_helpers'
+import { rateLimiter } from './lib/rateLimiter'
 
 export const joinWaitlist = mutation({
   args: {
@@ -10,6 +11,8 @@ export const joinWaitlist = mutation({
     service: v.string(),
   },
   handler: async (ctx, args) => {
+    await rateLimiter.limit(ctx, 'joinWaitlist', { key: args.email, throws: true })
+
     // Prevent duplicate entries per email+service
     const existing = await ctx.db
       .query('waitlist')

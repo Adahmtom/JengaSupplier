@@ -3,6 +3,7 @@ import { internal } from './_generated/api'
 import { v } from 'convex/values'
 import { requirePermission, requireSubscription, softPermission, getUserByClerkId, getActiveSubscription } from './_helpers'
 import { ADMIN_ROLES } from './lib/permissions'
+import { rateLimiter } from './lib/rateLimiter'
 
 export const listDrops = query({
   args: {
@@ -307,6 +308,7 @@ export const toggleLike = mutation({
   args: { dropId: v.id('drops') },
   handler: async (ctx, { dropId }) => {
     const { user } = await requireSubscription(ctx)
+    await rateLimiter.limit(ctx, 'toggleLike', { key: user._id, throws: true })
 
     const existing = await ctx.db
       .query('likes')
@@ -325,6 +327,7 @@ export const addComment = mutation({
   args: { dropId: v.id('drops'), body: v.string() },
   handler: async (ctx, { dropId, body }) => {
     const { user } = await requireSubscription(ctx)
+    await rateLimiter.limit(ctx, 'addComment', { key: user._id, throws: true })
     if (!body.trim()) throw new Error('Comment cannot be empty')
     return ctx.db.insert('comments', { dropId, userId: user._id, body: body.trim() })
   },

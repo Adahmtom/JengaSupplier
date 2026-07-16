@@ -3,6 +3,7 @@ import { v } from 'convex/values'
 import { internal } from './_generated/api'
 import { getUserByClerkId, getActiveSubscription } from './_helpers'
 import { ADMIN_ROLES } from './lib/permissions'
+import { rateLimiter } from './lib/rateLimiter'
 
 // Blocks phone numbers in any common format
 const PHONE_RE = /(\+?[\d][\s\-\.\(\)]?){7,}/
@@ -121,6 +122,7 @@ export const sendPost = mutation({
   },
   handler: async (ctx, { portalId, body, imageStorageId }) => {
     const user = await requireMember(ctx)
+    await rateLimiter.limit(ctx, 'sendPost', { key: user._id, throws: true })
 
     const trimmed = body.trim()
     if (!trimmed && !imageStorageId) throw new Error('Post cannot be empty')
@@ -273,6 +275,7 @@ export const sendReply = mutation({
   args: { postId: v.id('communityPosts'), body: v.string() },
   handler: async (ctx, { postId, body }) => {
     const user = await requireMember(ctx)
+    await rateLimiter.limit(ctx, 'sendReply', { key: user._id, throws: true })
     const trimmed = body.trim()
     if (!trimmed) throw new Error('Reply cannot be empty')
     if (trimmed.length > 1000) throw new Error('Reply too long (max 1000 characters)')
