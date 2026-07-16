@@ -233,12 +233,12 @@
 /* ── Quick actions ── */
 .quickActions {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(7, 1fr);
   gap: 1px;
   background: var(--color-border-subtle);
 }
-@media (max-width: 768px) { .quickActions { grid-template-columns: repeat(3, 1fr); } }
-@media (max-width: 480px) { .quickActions { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 1024px) { .quickActions { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 600px)  { .quickActions { grid-template-columns: repeat(3, 1fr); } }
 
 .quickBtn {
   display: flex;
@@ -343,8 +343,7 @@
   .auditTarget { font-size: 10px; }
   .auditTime { font-size: 9px; }
 
-  /* Quick actions: 3-col */
-  .quickActions { grid-template-columns: repeat(3, 1fr); }
+  /* Quick actions: 3-col on mobile (already set above, repeat for safe override) */
   .quickBtn { padding: var(--space-4) var(--space-2); }
   .quickLabel { font-size: 9px; }
 }
