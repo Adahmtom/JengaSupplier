@@ -107,7 +107,6 @@ export default function WarehouseUploadPage() {
               id="video"
               type="file"
               accept="video/*"
-              capture="environment"
               onChange={(e) => setVideoFile(e.target.files?.[0] ?? null)}
               className={styles.fileInput}
               required
@@ -116,8 +115,8 @@ export default function WarehouseUploadPage() {
               <p className={styles.fileName}>🎥 {videoFile.name}</p>
             ) : (
               <>
-                <p className={styles.uploadHint}>Tap to record or pick from gallery</p>
-                <p className={styles.uploadHintSub}>MP4 / MOV / WebM — mobile & desktop</p>
+                <p className={styles.uploadHint}>Click to select a video file</p>
+                <p className={styles.uploadHintSub}>MP4 / MOV / WebM</p>
               </>
             )}
           </div>
