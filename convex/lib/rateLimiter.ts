@@ -1,10 +1,10 @@
-import { RateLimiter } from '@convex-dev/ratelimiter'
+import { RateLimiter } from '@convex-dev/rate-limiter'
 import { components } from '../_generated/api'
 
 const MINUTE = 60_000
 const HOUR   = 60 * MINUTE
 
-export const rateLimiter = new RateLimiter(components.ratelimiter, {
+export const rateLimiter = new RateLimiter(components.rateLimiter, {
   // Waitlist: max 3 submissions per IP-equivalent (per user) per hour
   joinWaitlist: { kind: 'fixed window', rate: 3, period: HOUR },
 

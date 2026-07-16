@@ -16,6 +16,7 @@ import type * as drops from "../drops.js";
 import type * as http from "../http.js";
 import type * as invites from "../invites.js";
 import type * as lib_permissions from "../lib/permissions.js";
+import type * as lib_rateLimiter from "../lib/rateLimiter.js";
 import type * as portals from "../portals.js";
 import type * as seedBelleVendors from "../seedBelleVendors.js";
 import type * as seedSuppliers from "../seedSuppliers.js";
@@ -40,6 +41,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   invites: typeof invites;
   "lib/permissions": typeof lib_permissions;
+  "lib/rateLimiter": typeof lib_rateLimiter;
   portals: typeof portals;
   seedBelleVendors: typeof seedBelleVendors;
   seedSuppliers: typeof seedSuppliers;
@@ -76,4 +78,6 @@ export declare const internal: FilterApi<
   FunctionReference<any, "internal">
 >;
 
-export declare const components: {};
+export declare const components: {
+  rateLimiter: import("@convex-dev/rate-limiter/_generated/component.js").ComponentApi<"rateLimiter">;
+};
