@@ -17,6 +17,7 @@ import type * as http from "../http.js";
 import type * as invites from "../invites.js";
 import type * as lib_permissions from "../lib/permissions.js";
 import type * as portals from "../portals.js";
+import type * as seedBelleVendors from "../seedBelleVendors.js";
 import type * as seedSuppliers from "../seedSuppliers.js";
 import type * as stats from "../stats.js";
 import type * as stripe from "../stripe.js";
@@ -40,6 +41,7 @@ declare const fullApi: ApiFromModules<{
   invites: typeof invites;
   "lib/permissions": typeof lib_permissions;
   portals: typeof portals;
+  seedBelleVendors: typeof seedBelleVendors;
   seedSuppliers: typeof seedSuppliers;
   stats: typeof stats;
   stripe: typeof stripe;
