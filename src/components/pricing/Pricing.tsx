@@ -134,15 +134,15 @@ export function Pricing() {
 
           <div className={styles.priceRow}>
             <span className={styles.currency}>$</span>
-            <span className={styles.priceNum}>75</span>
+            <span className={styles.priceNum}>79</span>
             <span className={styles.pricePer}>/trim.</span>
           </div>
 
           <p className={styles.originalPrice}>
             <s>$87/trim.</s>
-            <span className={styles.saveTag}>Économisez $12</span>
+            <span className={styles.saveTag}>Économisez $8</span>
           </p>
-          <p className={styles.period}>soit $25/mois · facturation trimestrielle</p>
+          <p className={styles.period}>soit $26.33/mois · facturation trimestrielle</p>
 
           <ul className={styles.perks} role="list">
             {PERKS.map((perk) => (
