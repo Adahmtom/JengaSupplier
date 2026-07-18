@@ -18,18 +18,22 @@
   margin-top: var(--space-3);
 }
 
-/* ── Four-card grid (2×2) ── */
+/* ── Four-card grid (1×4) ── */
 .grid {
-  max-width: 960px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 0 clamp(var(--space-4), 5vw, var(--space-10));
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-6);
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-5);
   align-items: start;
 }
 
-@media (max-width: 680px) {
+@media (max-width: 900px) {
+  .grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 480px) {
   .grid { grid-template-columns: 1fr; }
 }
 
