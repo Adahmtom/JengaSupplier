@@ -21,13 +21,15 @@ function CheckoutInner() {
     setStatus('redirecting')
 
     const paramPlan = params.get('plan')
-    let plan: 'monthly' | 'yearly' = 'monthly'
-    if (paramPlan === 'yearly') {
-      plan = 'yearly'
+    let plan: 'monthly' | 'yearly' | 'quarterly' | 'semiannual' = 'monthly'
+    if (paramPlan === 'yearly' || paramPlan === 'quarterly' || paramPlan === 'semiannual') {
+      plan = paramPlan
     } else {
       try {
         const stored = localStorage.getItem('jenga_plan')
-        if (stored === 'yearly') plan = 'yearly'
+        if (stored === 'yearly' || stored === 'quarterly' || stored === 'semiannual') {
+          plan = stored as 'yearly' | 'quarterly' | 'semiannual'
+        }
         localStorage.removeItem('jenga_plan')
       } catch {}
     }

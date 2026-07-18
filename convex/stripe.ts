@@ -3,7 +3,7 @@ import { v } from 'convex/values'
 import { api, internal } from './_generated/api'
 
 export const createCheckoutSession = action({
-  args: { plan: v.optional(v.union(v.literal('monthly'), v.literal('yearly'))) },
+  args: { plan: v.optional(v.union(v.literal('monthly'), v.literal('yearly'), v.literal('quarterly'), v.literal('semiannual'))) },
   handler: async (ctx, { plan = 'monthly' }): Promise<string> => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new Error('Not authenticated')
@@ -20,7 +20,10 @@ export const createCheckoutSession = action({
       mode: 'subscription',
       payment_method_types: ['card', 'link'],
       line_items: [{
-        price: plan === 'yearly' ? process.env.STRIPE_YEARLY_PRICE_ID! : process.env.STRIPE_PRICE_ID!,
+        price: plan === 'yearly' ? process.env.STRIPE_YEARLY_PRICE_ID!
+          : plan === 'quarterly' ? process.env.STRIPE_QUARTERLY_PRICE_ID!
+          : plan === 'semiannual' ? process.env.STRIPE_SEMIANNUAL_PRICE_ID!
+          : process.env.STRIPE_PRICE_ID!,
         quantity: 1,
       }],
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/feed?welcome=1`,
@@ -61,7 +64,7 @@ export const getSessionEmail = action({
 })
 
 export const createGuestCheckoutSession = action({
-  args: { plan: v.union(v.literal('monthly'), v.literal('yearly')) },
+  args: { plan: v.union(v.literal('monthly'), v.literal('yearly'), v.literal('quarterly'), v.literal('semiannual')) },
   handler: async (_ctx, { plan }): Promise<string> => {
     const Stripe = (await import('stripe')).default
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2026-06-24.dahlia' })
@@ -70,7 +73,10 @@ export const createGuestCheckoutSession = action({
       mode: 'subscription',
       payment_method_types: ['card', 'link'],
       line_items: [{
-        price: plan === 'yearly' ? process.env.STRIPE_YEARLY_PRICE_ID! : process.env.STRIPE_PRICE_ID!,
+        price: plan === 'yearly' ? process.env.STRIPE_YEARLY_PRICE_ID!
+          : plan === 'quarterly' ? process.env.STRIPE_QUARTERLY_PRICE_ID!
+          : plan === 'semiannual' ? process.env.STRIPE_SEMIANNUAL_PRICE_ID!
+          : process.env.STRIPE_PRICE_ID!,
         quantity: 1,
       }],
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/sign-up?plan=${plan}&session_id={CHECKOUT_SESSION_ID}`,

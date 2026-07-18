@@ -18,9 +18,9 @@
   margin-top: var(--space-3);
 }
 
-/* ── Two-card grid ── */
+/* ── Four-card grid (2×2) ── */
 .grid {
-  max-width: 900px;
+  max-width: 960px;
   margin: 0 auto;
   padding: 0 clamp(var(--space-4), 5vw, var(--space-10));
   display: grid;

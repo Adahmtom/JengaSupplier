@@ -9,8 +9,10 @@ import styles from './pricing.module.css'
 
 // Set these once after creating Payment Links in the Stripe dashboard.
 // If blank, falls back to dynamic session creation via /pre-checkout.
-const STRIPE_MONTHLY_LINK = process.env.NEXT_PUBLIC_STRIPE_MONTHLY_LINK ?? ''
-const STRIPE_YEARLY_LINK  = process.env.NEXT_PUBLIC_STRIPE_YEARLY_LINK  ?? ''
+const STRIPE_MONTHLY_LINK    = process.env.NEXT_PUBLIC_STRIPE_MONTHLY_LINK    ?? ''
+const STRIPE_QUARTERLY_LINK  = process.env.NEXT_PUBLIC_STRIPE_QUARTERLY_LINK  ?? 'https://buy.stripe.com/6oU5kC3a39qEbszb0o0sU03'
+const STRIPE_SEMIANNUAL_LINK = process.env.NEXT_PUBLIC_STRIPE_SEMIANNUAL_LINK ?? 'https://buy.stripe.com/aFa28q6mf5ao4078Sg0sU02'
+const STRIPE_YEARLY_LINK     = process.env.NEXT_PUBLIC_STRIPE_YEARLY_LINK     ?? ''
 
 const PERKS = [
   'Plus de 500 fournisseurs vérifiés',
@@ -31,7 +33,7 @@ function PlanButton({
   className,
   isSignedIn,
 }: {
-  plan: 'monthly' | 'yearly'
+  plan: 'monthly' | 'yearly' | 'quarterly' | 'semiannual'
   label: string
   className: string
   isSignedIn: boolean
@@ -41,7 +43,11 @@ function PlanButton({
   const createGuestCheckout = useAction(api.stripe.createGuestCheckoutSession)
 
   async function handleClick() {
-    const paymentLink = plan === 'yearly' ? STRIPE_YEARLY_LINK : STRIPE_MONTHLY_LINK
+    const paymentLink =
+      plan === 'yearly' ? STRIPE_YEARLY_LINK :
+      plan === 'quarterly' ? STRIPE_QUARTERLY_LINK :
+      plan === 'semiannual' ? STRIPE_SEMIANNUAL_LINK :
+      STRIPE_MONTHLY_LINK
     if (paymentLink) {
       window.location.href = paymentLink
       return
@@ -119,6 +125,66 @@ export function Pricing() {
 
           <PlanButton plan="monthly" label="Deviens Membre" className={`btn ${styles.joinBtnSecondary}`} isSignedIn={!!isSignedIn} />
           <p className={styles.note}>Accès instantané · Aucun frais caché</p>
+        </div>
+
+        {/* ── 3-month card ── */}
+        <div className={styles.card}>
+          <div className={styles.goldLine} aria-hidden="true" />
+          <p className={styles.planLabel}>3 Mois</p>
+
+          <div className={styles.priceRow}>
+            <span className={styles.currency}>$</span>
+            <span className={styles.priceNum}>75</span>
+            <span className={styles.pricePer}>/trim.</span>
+          </div>
+
+          <p className={styles.originalPrice}>
+            <s>$87/trim.</s>
+            <span className={styles.saveTag}>Économisez $12</span>
+          </p>
+          <p className={styles.period}>soit $25/mois · facturation trimestrielle</p>
+
+          <ul className={styles.perks} role="list">
+            {PERKS.map((perk) => (
+              <li key={perk} className={styles.perk}>
+                <span className={styles.perkIcon} aria-hidden="true">✦</span>
+                {perk}
+              </li>
+            ))}
+          </ul>
+
+          <PlanButton plan="quarterly" label="Commencer — 3 mois" className={`btn ${styles.joinBtnSecondary}`} isSignedIn={!!isSignedIn} />
+          <p className={styles.note}>Accès instantané · Facturation trimestrielle · Aucun frais caché</p>
+        </div>
+
+        {/* ── 6-month card ── */}
+        <div className={styles.card}>
+          <div className={styles.goldLine} aria-hidden="true" />
+          <p className={styles.planLabel}>6 Mois</p>
+
+          <div className={styles.priceRow}>
+            <span className={styles.currency}>$</span>
+            <span className={styles.priceNum}>139</span>
+            <span className={styles.pricePer}>/sem.</span>
+          </div>
+
+          <p className={styles.originalPrice}>
+            <s>$174/sem.</s>
+            <span className={styles.saveTag}>Économisez $35</span>
+          </p>
+          <p className={styles.period}>soit $23/mois · facturation semestrielle</p>
+
+          <ul className={styles.perks} role="list">
+            {PERKS.map((perk) => (
+              <li key={perk} className={styles.perk}>
+                <span className={styles.perkIcon} aria-hidden="true">✦</span>
+                {perk}
+              </li>
+            ))}
+          </ul>
+
+          <PlanButton plan="semiannual" label="Commencer — 6 mois" className={`btn ${styles.joinBtnSecondary}`} isSignedIn={!!isSignedIn} />
+          <p className={styles.note}>Accès instantané · Facturation semestrielle · Aucun frais caché</p>
         </div>
 
         {/* ── Yearly card (featured) ── */}
