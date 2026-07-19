@@ -1,7 +1,7 @@
 export default {
   providers: [
     {
-      domain: 'https://relaxing-lioness-22.clerk.accounts.dev',
+      domain: 'https://clerk.jengasuppliers.com',
       applicationID: 'convex',
     },
   ],
