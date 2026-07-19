@@ -29,9 +29,7 @@ function SignInInner() {
           appearance={{
             variables: {
               colorBackground: '#ffffff',
-              colorText: '#1a1a1a',
               colorInputBackground: '#f5f5f5',
-              colorInputText: '#1a1a1a',
               colorPrimary: '#c9a84c',
             },
           }}
