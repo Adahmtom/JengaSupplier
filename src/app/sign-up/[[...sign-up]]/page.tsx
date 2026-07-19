@@ -45,6 +45,15 @@ function SignUpInner() {
         <SignUp
           forceRedirectUrl={redirectUrl}
           initialValues={prefillEmail ? { emailAddress: prefillEmail } : undefined}
+          appearance={{
+            variables: {
+              colorBackground: '#ffffff',
+              colorText: '#1a1a1a',
+              colorInputBackground: '#f5f5f5',
+              colorInputText: '#1a1a1a',
+              colorPrimary: '#c9a84c',
+            },
+          }}
         />
       </div>
     </div>
