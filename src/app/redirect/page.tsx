@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { useQuery } from 'convex/react'
+import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 
 const ADMIN_ROLES = new Set(['super_admin', 'admin', 'moderator'])
@@ -10,20 +10,25 @@ const ADMIN_ROLES = new Set(['super_admin', 'admin', 'moderator'])
 export default function RedirectPage() {
   const router = useRouter()
   const me = useQuery(api.users.getMe)
+  const ensureUser = useMutation(api.users.ensureUser)
+  const ensured = useRef(false)
 
   useEffect(() => {
     if (me === undefined) return // still loading
     if (me === null) {
-      // Not in Convex yet — wait a moment and retry via reload
-      const t = setTimeout(() => router.replace('/redirect'), 1200)
-      return () => clearTimeout(t)
+      // User authenticated in Clerk but not yet in Convex — create them now
+      if (!ensured.current) {
+        ensured.current = true
+        ensureUser().catch(() => {})
+      }
+      return
     }
     if (ADMIN_ROLES.has(me.role)) {
       router.replace('/admin')
     } else {
       router.replace('/feed')
     }
-  }, [me, router])
+  }, [me, router, ensureUser])
 
   return (
     <div style={{
