@@ -184,10 +184,10 @@ export default function LandingPage() {
               <p style={{ fontFamily: 'var(--font-serif)', fontSize: '2rem', fontWeight: 700, color: 'var(--color-gold)' }}>$3 500</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', marginTop: 'auto' }}>
                 <SessionSlot
-                  label="Septembre 2026"
-                  startLabel="Début : Avril 2026"
-                  deadline={new Date('2026-09-01T00:00:00')}
-                  service="travel-sep-2026"
+                  label="Avril 2027"
+                  startLabel="Début : Avril 2027"
+                  deadline={new Date('2027-04-01T00:00:00')}
+                  service="travel-apr-2027"
                   serviceLabel="Voyage en Chine avec Belle & l'équipe Jenga"
                   onJoin={setWaitlist}
                 />
@@ -209,10 +209,10 @@ export default function LandingPage() {
               <p style={{ fontFamily: 'var(--font-serif)', fontSize: '2rem', fontWeight: 700, color: 'var(--color-gold)' }}>$1 200</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', marginTop: 'auto' }}>
                 <SessionSlot
-                  label="Septembre 2026"
-                  startLabel="Début : Avril 2026"
-                  deadline={new Date('2026-09-01T00:00:00')}
-                  service="sourcing-sep-2026"
+                  label="Avril 2027"
+                  startLabel="Début : Avril 2027"
+                  deadline={new Date('2027-04-01T00:00:00')}
+                  service="sourcing-apr-2027"
                   serviceLabel="Sourcing de produits en Chine pour vous"
                   onJoin={setWaitlist}
                 />
