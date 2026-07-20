@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect, useRef } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useQuery, useAction } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import { DropCard } from '@/components/portal/DropCard'
@@ -16,17 +17,20 @@ export default function FeedPage() {
   const activateSubscription = useAction(api.stripe.activateGuestSubscription)
   const me = useQuery(api.users.getMe)
   const activated = useRef(false)
+  const searchParams = useSearchParams()
 
-  // Silently activate subscription if user just came from Stripe payment
+  // Activate subscription eagerly — check URL session_id first, then sessionStorage
   useEffect(() => {
     if (activated.current || !me) return
-    let sessionId = ''
-    try { sessionId = sessionStorage.getItem('jenga_stripe_session') ?? '' } catch {}
+    let sessionId = searchParams.get('session_id') ?? ''
+    if (!sessionId) {
+      try { sessionId = sessionStorage.getItem('jenga_stripe_session') ?? '' } catch {}
+    }
     if (!sessionId) return
     activated.current = true
     try { sessionStorage.removeItem('jenga_stripe_session') } catch {}
     activateSubscription({ sessionId }).catch(() => {})
-  }, [me, activateSubscription])
+  }, [me, activateSubscription, searchParams])
 
   const portalMap = useMemo(
     () => new Map(portals?.map((p) => [p._id, p]) ?? []),
@@ -54,7 +58,8 @@ export default function FeedPage() {
     return drops.filter((d) => d._creationTime > oneDayAgo).length
   }, [drops])
 
-  const isLoading = drops === undefined || drops === null
+  const isLoading = drops === undefined
+  const noSubscription = drops === null
 
   return (
     <div className={styles.page}>
@@ -122,6 +127,25 @@ export default function FeedPage() {
         </p>
       )}
 
+      {/* Subscription syncing — payment received but webhook not yet processed */}
+      {noSubscription && (
+        <div className={styles.empty} style={{ padding: '3rem 1rem', textAlign: 'center' }}>
+          <p style={{ fontSize: '2rem', marginBottom: '1rem' }}>⏳</p>
+          <p style={{ fontWeight: 700, marginBottom: '0.5rem', color: 'var(--color-text)' }}>
+            Activation de votre abonnement en cours…
+          </p>
+          <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+            Votre paiement a bien été reçu. Votre accès sera disponible dans quelques secondes.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            style={{ padding: '0.6rem 1.4rem', background: 'var(--color-gold)', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}
+          >
+            Actualiser
+          </button>
+        </div>
+      )}
+
       {/* Loading skeletons */}
       {isLoading && (
         <div className={styles.feed}>
@@ -132,14 +156,14 @@ export default function FeedPage() {
       )}
 
       {/* Empty states */}
-      {!isLoading && drops?.length === 0 && (
+      {!isLoading && !noSubscription && drops?.length === 0 && (
         <div className={styles.empty}>
           <p className={styles.emptyIcon}>📦</p>
           <p className={styles.emptyText}>{t.feedNoDrops}</p>
         </div>
       )}
 
-      {!isLoading && drops && drops.length > 0 && filtered.length === 0 && (
+      {!isLoading && !noSubscription && drops && drops.length > 0 && filtered.length === 0 && (
         <div className={styles.empty}>
           <p className={styles.emptyIcon}>🔍</p>
           <p className={styles.emptyText}>{t.feedNoResults}</p>

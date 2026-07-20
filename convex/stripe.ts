@@ -26,7 +26,7 @@ export const createCheckoutSession = action({
           : process.env.STRIPE_PRICE_ID!,
         quantity: 1,
       }],
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/feed?welcome=1`,
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/feed?welcome=1&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/?canceled=1`,
       customer_email: user.email,
       metadata: { userId: user._id, clerkId: identity.subject },
