@@ -21,7 +21,7 @@ function SignUpInner() {
     }
   }, [sessionId, getEmail])
 
-  const redirectUrl = sessionId ? '/activate' : `/checkout?plan=${plan}`
+  const redirectUrl = sessionId ? `/activate?session_id=${sessionId}` : `/checkout?plan=${plan}`
   const isPaid = !!sessionId
 
   return (
