@@ -57,9 +57,27 @@ export const ensureUser = mutation({
 
     if (existing) return existing._id
 
+    // Check if a placeholder record exists for this email (subscriber who paid before signing up)
+    const email = identity.email ?? ''
+    if (email) {
+      const placeholder = await ctx.db
+        .query('users')
+        .withIndex('by_clerkId', (q) => q.eq('clerkId', `placeholder:${email}`))
+        .unique()
+      if (placeholder) {
+        // Claim the placeholder — swap in the real Clerk ID so queries work immediately
+        await ctx.db.patch(placeholder._id, {
+          clerkId: identity.subject,
+          name: identity.name ?? placeholder.name,
+          imageUrl: identity.pictureUrl ?? placeholder.imageUrl,
+        })
+        return placeholder._id
+      }
+    }
+
     return ctx.db.insert('users', {
       clerkId: identity.subject,
-      email: identity.email ?? '',
+      email,
       name: identity.name ?? undefined,
       imageUrl: identity.pictureUrl ?? undefined,
       role: 'member',

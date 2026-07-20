@@ -618,3 +618,38 @@ export const fullMigration = internalAction({
     return results
   },
 })
+
+// Provision a subscriber who paid but has no Convex user record yet.
+// Uses a placeholder clerkId so the real one gets set on first sign-in via ensureUser.
+export const provisionSubscriberByEmail = internalAction({
+  args: {
+    email: v.string(),
+    name: v.string(),
+    stripeCustomerId: v.string(),
+    stripeSubscriptionId: v.string(),
+    stripePriceId: v.string(),
+    currentPeriodEnd: v.number(),
+  },
+  handler: async (ctx, args): Promise<string> => {
+    // 1. Find or create user by email using placeholder clerkId
+    const placeholderClerkId = `placeholder:${args.email}`
+    const userId: string = await ctx.runMutation(internal.users.upsertUser, {
+      clerkId: placeholderClerkId,
+      email: args.email,
+      name: args.name,
+    })
+
+    // 2. Upsert subscription
+    await ctx.runMutation(internal.subscriptions.upsertSubscription, {
+      userId: userId as any,
+      stripeCustomerId: args.stripeCustomerId,
+      stripeSubscriptionId: args.stripeSubscriptionId,
+      stripePriceId: args.stripePriceId,
+      status: 'active',
+      currentPeriodEnd: args.currentPeriodEnd,
+      cancelAtPeriodEnd: false,
+    })
+
+    return userId
+  },
+})
