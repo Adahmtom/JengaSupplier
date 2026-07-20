@@ -301,6 +301,34 @@ export const listAllForSync = internalQuery({
   handler: async (ctx) => ctx.db.query('users').collect(),
 })
 
+// Find a placeholder user created by the Stripe webhook before the user signed up
+export const findByPlaceholderEmail = internalQuery({
+  args: { email: v.string() },
+  handler: async (ctx, { email }) => {
+    return ctx.db
+      .query('users')
+      .withIndex('by_clerkId', (q) => q.eq('clerkId', `placeholder:${email}`))
+      .unique()
+  },
+})
+
+// Claim a placeholder record — swap in the real Clerk ID from the Clerk webhook
+export const claimPlaceholder = internalMutation({
+  args: {
+    userId: v.id('users'),
+    clerkId: v.string(),
+    name: v.optional(v.string()),
+    imageUrl: v.optional(v.string()),
+  },
+  handler: async (ctx, { userId, clerkId, name, imageUrl }) => {
+    await ctx.db.patch(userId, {
+      clerkId,
+      ...(name ? { name } : {}),
+      ...(imageUrl ? { imageUrl } : {}),
+    })
+  },
+})
+
 // Internal-only: set super_admin by email, no auth required (used by HTTP bootstrap endpoint)
 export const bootstrapAdmin = internalMutation({
   args: { email: v.string() },

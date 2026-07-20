@@ -53,7 +53,7 @@ http.route({
         stripeCustomerId: customerId,
       })
 
-      // On first checkout, look up user via metadata
+      // On first checkout, look up user via metadata (authenticated checkout)
       let userId = user?._id
       if (!userId && event.type === 'checkout.session.completed') {
         const session = event.data.object as import('stripe').Stripe.Checkout.Session
@@ -62,9 +62,27 @@ http.route({
           const foundUser = await ctx.runQuery(internal.users.getUserByClerkId, { clerkId })
           userId = foundUser?._id
         }
+
+        // Guest checkout: provision placeholder user immediately from customer email
+        // so the subscription is ready the moment they sign up with Clerk
+        if (!userId) {
+          const customerEmail = session.customer_details?.email ?? (subscription.customer as any)?.email
+          const customerName = session.customer_details?.name ?? ''
+          if (customerEmail) {
+            const provisionedId = await ctx.runAction(internal.seedNewSuppliers.provisionSubscriberByEmail, {
+              email: customerEmail,
+              name: customerName,
+              stripeCustomerId: customerId,
+              stripeSubscriptionId: subscription.id,
+              stripePriceId: subscription.items.data[0].price.id,
+              currentPeriodEnd: (subscription as any).current_period_end * 1000,
+            })
+            // Subscription already upserted inside provisionSubscriberByEmail — return early
+            return new Response('ok', { status: 200 })
+          }
+        }
       }
 
-      // For payment-first flow, user may not exist yet — activateGuestSubscription handles activation after sign-up
       if (!userId) return new Response('ok', { status: 200 })
 
       const item = subscription.items.data[0]
@@ -126,14 +144,22 @@ http.route({
       const primaryEmail = (data.email_addresses as Array<{ email_address: string; id: string }>).find(
         (e) => e.id === data.primary_email_address_id,
       )
+      const email = primaryEmail?.email_address ?? ''
+      const name = [data.first_name, data.last_name].filter(Boolean).join(' ') || undefined
+      const imageUrl = (data.image_url as string) || undefined
+      const clerkId = data.id as string
 
-      await ctx.runMutation(internal.users.upsertUser, {
-        clerkId: data.id as string,
-        email: primaryEmail?.email_address ?? '',
-        name:
-          [data.first_name, data.last_name].filter(Boolean).join(' ') || undefined,
-        imageUrl: (data.image_url as string) || undefined,
-      })
+      // Check for placeholder record created by Stripe webhook before user signed up
+      if (email) {
+        const placeholder = await ctx.runQuery(internal.users.findByPlaceholderEmail, { email })
+        if (placeholder) {
+          // Claim it — swap placeholder clerkId for real one so queries resolve immediately
+          await ctx.runMutation(internal.users.claimPlaceholder, { userId: placeholder._id, clerkId, name, imageUrl })
+          return new Response('ok', { status: 200 })
+        }
+      }
+
+      await ctx.runMutation(internal.users.upsertUser, { clerkId, email, name, imageUrl })
     }
 
     return new Response('ok', { status: 200 })
