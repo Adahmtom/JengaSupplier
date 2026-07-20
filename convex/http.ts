@@ -221,8 +221,18 @@ http.route({
       const imageUrl = (data.image_url as string) || undefined
       const clerkId = data.id as string
 
-      await ctx.runMutation(internal.users.upsertUser, { clerkId, email, name, imageUrl })
+      const userId = await ctx.runMutation(internal.users.upsertUser, { clerkId, email, name, imageUrl })
       console.log(`[clerk-webhook] ${event.type} upserted clerkId=${clerkId} email=${email}`)
+
+      // Self-heal: if this user already paid in Stripe but Convex has no subscription record,
+      // find and upsert it now so they get immediate access on first sign-in.
+      if (event.type === 'user.created' && userId && email) {
+        await ctx.runAction(internal.backfill.selfHealForUser, {
+          userId: userId as string,
+          clerkId,
+          email,
+        })
+      }
     }
 
     return new Response('ok', { status: 200 })

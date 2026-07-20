@@ -22,8 +22,17 @@ type Plan = 'monthly' | 'quarterly' | 'semiannual' | 'yearly'
 function PlanButton({ plan, label, className }: { plan: Plan; label: string; className: string }) {
   const { isSignedIn } = useAuth()
   const href = isSignedIn ? `/checkout?plan=${plan}` : `/sign-up?plan=${plan}`
+
+  const savePlan = () => {
+    try {
+      localStorage.setItem('jenga_plan', plan)
+      // 2-hour cookie survives OAuth redirects and email-verification detours
+      document.cookie = `jenga_plan=${plan}; path=/; max-age=7200; SameSite=Lax`
+    } catch {}
+  }
+
   return (
-    <Link href={href} className={className} prefetch={false}>
+    <Link href={href} className={className} prefetch={false} onClick={savePlan}>
       {label}
     </Link>
   )

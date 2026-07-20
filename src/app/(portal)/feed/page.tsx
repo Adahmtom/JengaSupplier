@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { useQuery } from 'convex/react'
+import { useQuery, useAction } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import { DropCard } from '@/components/portal/DropCard'
 import { useLang } from '@/lib/i18n'
@@ -44,8 +44,8 @@ export default function FeedPage() {
 
   const isLoading = drops === undefined
   const noSubscription = drops === null
-  // welcome=1 means user just paid — webhook may not have landed yet
   const justPaid = searchParams.get('welcome') === '1'
+  const sessionId = searchParams.get('session_id') ?? undefined
 
   return (
     <div className={styles.page}>
@@ -113,8 +113,11 @@ export default function FeedPage() {
         </p>
       )}
 
-      {/* No subscription — webhook lag fallback if just paid, else pricing CTA */}
-      {noSubscription && (justPaid ? <WebhookLagFallback /> : <NoPlanCTA />)}
+      {/* No subscription states */}
+      {noSubscription && justPaid && (
+        <PaymentActivation sessionId={sessionId} />
+      )}
+      {noSubscription && !justPaid && <NoPlanCTA />}
 
       {/* Loading skeletons */}
       {isLoading && (
@@ -159,22 +162,60 @@ export default function FeedPage() {
   )
 }
 
-// Shown for max 8s when welcome=1 and webhook hasn't landed yet.
-// After 8s, redirects to pricing so the user isn't stuck.
-function WebhookLagFallback() {
+// Shown immediately after Stripe redirect. Calls activateSubscription with the
+// session_id so access is granted before the webhook fires. Falls back to a
+// timed redirect to pricing if Stripe retrieval fails for any reason.
+function PaymentActivation({ sessionId }: { sessionId?: string }) {
+  const activate = useAction(api.stripe.activateSubscription)
   const [dots, setDots] = useState('.')
+  const [error, setError] = useState(false)
+  const called = useRef(false)
   const redirected = useRef(false)
 
   useEffect(() => {
     const dotsId = setInterval(() => setDots((d) => (d.length >= 3 ? '.' : d + '.')), 600)
-    const timeoutId = setTimeout(() => {
-      if (!redirected.current) {
-        redirected.current = true
-        window.location.href = '/#pricing'
-      }
-    }, 8000)
-    return () => { clearInterval(dotsId); clearTimeout(timeoutId) }
+    return () => clearInterval(dotsId)
   }, [])
+
+  useEffect(() => {
+    if (!sessionId || called.current) return
+    called.current = true
+
+    activate({ sessionId })
+      .catch((err) => {
+        console.error('[feed] activateSubscription failed:', err)
+        setError(true)
+        // Give the webhook a few more seconds before giving up
+        setTimeout(() => {
+          if (!redirected.current) {
+            redirected.current = true
+            window.location.href = '/#pricing'
+          }
+        }, 5000)
+      })
+    // On success, the Convex reactive query for drops will update automatically
+    // and this component will unmount — no explicit navigation needed.
+  }, [sessionId, activate])
+
+  if (error) {
+    return (
+      <div style={{ padding: '4rem 1rem', textAlign: 'center' }}>
+        <p style={{ fontSize: '2rem', marginBottom: '1rem' }}>⚠️</p>
+        <p style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--color-text)', marginBottom: '0.5rem' }}>
+          Vérification en cours…
+        </p>
+        <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+          Votre paiement a été reçu. Patientez quelques secondes.
+        </p>
+        <button
+          onClick={() => window.location.reload()}
+          style={{ padding: '0.6rem 1.4rem', background: 'var(--color-gold)', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}
+        >
+          Réessayer
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div style={{ padding: '4rem 1rem', textAlign: 'center' }}>
@@ -183,11 +224,11 @@ function WebhookLagFallback() {
         Activation de votre accès{dots}
       </p>
       <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', maxWidth: '320px', margin: '0 auto 1.5rem' }}>
-        Votre paiement a été confirmé. Votre vault s&apos;ouvre dans quelques secondes.
+        Votre paiement a été confirmé. Ouverture de votre vault…
       </p>
       <button
         onClick={() => window.location.reload()}
-        style={{ padding: '0.6rem 1.4rem', background: 'var(--color-gold)', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', fontSize: '0.9rem' }}
+        style={{ padding: '0.6rem 1.4rem', background: 'transparent', color: 'var(--color-text-muted)', border: '1px solid currentColor', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem' }}
       >
         Actualiser maintenant
       </button>

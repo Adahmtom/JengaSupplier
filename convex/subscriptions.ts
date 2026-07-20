@@ -75,6 +75,18 @@ export const upsertSubscription = internalMutation({
   },
 })
 
+// Used by selfHealForUser to check whether a user already has a subscription
+export const getSubscriptionForUser = internalQuery({
+  args: { userId: v.id('users') },
+  handler: async (ctx, { userId }) => {
+    const subs = await ctx.db
+      .query('subscriptions')
+      .withIndex('by_userId', (q) => q.eq('userId', userId))
+      .collect()
+    return subs.find((s) => s.status === 'active' || s.status === 'trialing') ?? null
+  },
+})
+
 export const getUserByStripeCustomerId = internalQuery({
   args: { stripeCustomerId: v.string() },
   handler: async (ctx, { stripeCustomerId }) => {

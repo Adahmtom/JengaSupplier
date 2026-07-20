@@ -35,7 +35,8 @@ export const createCheckoutSession = action({
       mode: 'subscription',
       payment_method_types: ['card', 'link'],
       line_items: [{ price: priceIdForPlan(plan as Plan), quantity: 1 }],
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/feed?welcome=1`,
+      // session_id lets /feed immediately verify payment server-side before webhook arrives
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/feed?welcome=1&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/?canceled=1`,
       customer_email: user.email,
       // clerkUserId in metadata is the canonical link — webhook reads this

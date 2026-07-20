@@ -11,6 +11,7 @@
 import type * as _helpers from "../_helpers.js";
 import type * as admin from "../admin.js";
 import type * as audit from "../audit.js";
+import type * as backfill from "../backfill.js";
 import type * as community from "../community.js";
 import type * as drops from "../drops.js";
 import type * as http from "../http.js";
@@ -37,6 +38,7 @@ declare const fullApi: ApiFromModules<{
   _helpers: typeof _helpers;
   admin: typeof admin;
   audit: typeof audit;
+  backfill: typeof backfill;
   community: typeof community;
   drops: typeof drops;
   http: typeof http;

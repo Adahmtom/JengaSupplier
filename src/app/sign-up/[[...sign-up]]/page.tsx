@@ -1,15 +1,35 @@
 'use client'
 
-import { Suspense } from 'react'
+import { Suspense, useEffect } from 'react'
 import { SignUp } from '@clerk/nextjs'
 import { useSearchParams } from 'next/navigation'
 
 const VALID_PLANS = new Set(['monthly', 'quarterly', 'semiannual', 'yearly'])
 
+function readCookiePlan(): string | null {
+  if (typeof document === 'undefined') return null
+  const match = document.cookie.match(/(?:^|;\s*)jenga_plan=([^;]+)/)
+  return match ? match[1] : null
+}
+
 function SignUpInner() {
   const params = useSearchParams()
-  const raw = params.get('plan') ?? 'monthly'
+
+  // Resolution order: query param → cookie → localStorage
+  const rawParam = params.get('plan')
+  const rawCookie = readCookiePlan()
+  const rawStorage = typeof window !== 'undefined' ? localStorage.getItem('jenga_plan') : null
+  const raw = rawParam ?? rawCookie ?? rawStorage ?? 'monthly'
   const plan = VALID_PLANS.has(raw) ? raw : 'monthly'
+
+  // Re-write storage on every render so detours (email verification, OAuth)
+  // don't lose the selection even if the query param disappears from the URL.
+  useEffect(() => {
+    try {
+      localStorage.setItem('jenga_plan', plan)
+      document.cookie = `jenga_plan=${plan}; path=/; max-age=7200; SameSite=Lax`
+    } catch {}
+  }, [plan])
 
   return (
     <div style={{
@@ -41,10 +61,11 @@ function SignUpInner() {
             Créez votre compte
           </h1>
           <p style={{ color: 'var(--color-text-muted)', fontSize: '0.95rem' }}>
-            Étape 1 sur 2 — Ensuite vous choisirez votre plan
+            Étape 1 sur 2 — Ensuite, vous accéderez au paiement
           </p>
         </div>
         <SignUp
+          // forceRedirectUrl is respected by Clerk even after OAuth and email verification
           forceRedirectUrl={`/checkout?plan=${plan}`}
           appearance={{
             variables: {
