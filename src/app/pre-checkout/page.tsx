@@ -1,37 +1,25 @@
 'use client'
 
-import { Suspense, useEffect, useRef } from 'react'
-import { useSearchParams } from 'next/navigation'
-import { useAction } from 'convex/react'
-import { api } from '../../../convex/_generated/api'
+import { Suspense, useEffect } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import styles from '../checkout/checkout.module.css'
 
-function PreCheckoutInner() {
-  const createGuestCheckout = useAction(api.stripe.createGuestCheckoutSession)
+// Old guest pre-checkout route — redirects to the new signup-first flow.
+function PreCheckoutRedirect() {
   const params = useSearchParams()
-  const called = useRef(false)
+  const router = useRouter()
 
   useEffect(() => {
-    if (called.current) return
-    called.current = true
-
-    const raw = params.get('plan')
-    const plan: 'monthly' | 'yearly' = raw === 'yearly' ? 'yearly' : 'monthly'
-
-    try { localStorage.setItem('jenga_plan', plan) } catch {}
-
-    createGuestCheckout({ plan })
-      .then((url) => { window.location.href = url })
-      .catch(() => { window.location.href = '/?canceled=1' })
-  }, [createGuestCheckout, params])
+    const plan = params.get('plan') ?? 'monthly'
+    router.replace(`/sign-up?plan=${plan}`)
+  }, [params, router])
 
   return (
     <div className={styles.page}>
       <div className={styles.inner}>
         <div className={styles.spinner} aria-hidden="true" />
         <p className={styles.eyebrow}>✦ China Business Vault by Belle Jones</p>
-        <h1 className={styles.heading}>Préparation du paiement…</h1>
-        <p className={styles.sub}>Vous allez être redirigé vers le paiement sécurisé.</p>
+        <h1 className={styles.heading}>Redirection…</h1>
       </div>
     </div>
   )
@@ -40,7 +28,7 @@ function PreCheckoutInner() {
 export default function PreCheckoutPage() {
   return (
     <Suspense fallback={<div style={{ minHeight: '100vh', background: '#000' }} />}>
-      <PreCheckoutInner />
+      <PreCheckoutRedirect />
     </Suspense>
   )
 }

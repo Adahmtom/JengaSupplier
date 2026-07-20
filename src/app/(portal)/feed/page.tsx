@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { useQuery, useAction } from 'convex/react'
+import { useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import { DropCard } from '@/components/portal/DropCard'
 import { useLang } from '@/lib/i18n'
@@ -14,60 +14,7 @@ export default function FeedPage() {
   const [search, setSearch] = useState('')
   const [activePortal, setActivePortal] = useState<string | null>(null)
   const { t } = useLang()
-  const activateSubscription = useAction(api.stripe.activateGuestSubscription)
-  const me = useQuery(api.users.getMe)
-  const activated = useRef(false)
-  const retryTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const searchParams = useSearchParams()
-
-  // Persist session_id from URL to localStorage immediately on mount
-  useEffect(() => {
-    const urlSessionId = searchParams.get('session_id')
-    if (urlSessionId) {
-      try { localStorage.setItem('jenga_stripe_session', urlSessionId) } catch {}
-    }
-  }, [searchParams])
-
-  // Activate subscription — retries every 4s up to 8 times if it fails
-  useEffect(() => {
-    if (activated.current) return
-
-    let sessionId = searchParams.get('session_id') ?? ''
-    if (!sessionId) {
-      try { sessionId = localStorage.getItem('jenga_stripe_session') ?? '' } catch {}
-    }
-    if (!sessionId) {
-      try { sessionId = sessionStorage.getItem('jenga_stripe_session') ?? '' } catch {}
-    }
-    if (!sessionId) return
-
-    let attempts = 0
-    const MAX_ATTEMPTS = 8
-
-    const tryActivate = () => {
-      // Wait until we have a user identity (me !== undefined means query resolved)
-      if (me === undefined) {
-        retryTimer.current = setTimeout(tryActivate, 1000)
-        return
-      }
-      if (attempts >= MAX_ATTEMPTS) return
-      attempts++
-      activateSubscription({ sessionId })
-        .then(() => {
-          activated.current = true
-          try { localStorage.removeItem('jenga_stripe_session') } catch {}
-          try { sessionStorage.removeItem('jenga_stripe_session') } catch {}
-        })
-        .catch(() => {
-          // Retry after 4s
-          retryTimer.current = setTimeout(tryActivate, 4000)
-        })
-    }
-
-    tryActivate()
-    return () => { if (retryTimer.current) clearTimeout(retryTimer.current) }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [me])
 
   const portalMap = useMemo(
     () => new Map(portals?.map((p) => [p._id, p]) ?? []),
@@ -97,6 +44,8 @@ export default function FeedPage() {
 
   const isLoading = drops === undefined
   const noSubscription = drops === null
+  // welcome=1 means user just paid — webhook may not have landed yet
+  const justPaid = searchParams.get('welcome') === '1'
 
   return (
     <div className={styles.page}>
@@ -164,8 +113,8 @@ export default function FeedPage() {
         </p>
       )}
 
-      {/* Subscription syncing — payment received but not yet active in Convex */}
-      {noSubscription && <SubscriptionSyncing />}
+      {/* No subscription — webhook lag fallback if just paid, else pricing CTA */}
+      {noSubscription && (justPaid ? <WebhookLagFallback /> : <NoPlanCTA />)}
 
       {/* Loading skeletons */}
       {isLoading && (
@@ -210,12 +159,23 @@ export default function FeedPage() {
   )
 }
 
-function SubscriptionSyncing() {
+// Shown for max 8s when welcome=1 and webhook hasn't landed yet.
+// After 8s, redirects to pricing so the user isn't stuck.
+function WebhookLagFallback() {
   const [dots, setDots] = useState('.')
+  const redirected = useRef(false)
+
   useEffect(() => {
-    const id = setInterval(() => setDots((d) => d.length >= 3 ? '.' : d + '.'), 600)
-    return () => clearInterval(id)
+    const dotsId = setInterval(() => setDots((d) => (d.length >= 3 ? '.' : d + '.')), 600)
+    const timeoutId = setTimeout(() => {
+      if (!redirected.current) {
+        redirected.current = true
+        window.location.href = '/#pricing'
+      }
+    }, 8000)
+    return () => { clearInterval(dotsId); clearTimeout(timeoutId) }
   }, [])
+
   return (
     <div style={{ padding: '4rem 1rem', textAlign: 'center' }}>
       <p style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>✦</p>
@@ -231,6 +191,26 @@ function SubscriptionSyncing() {
       >
         Actualiser maintenant
       </button>
+    </div>
+  )
+}
+
+function NoPlanCTA() {
+  return (
+    <div style={{ padding: '4rem 1rem', textAlign: 'center' }}>
+      <p style={{ fontSize: '2rem', marginBottom: '1rem' }}>🔒</p>
+      <p style={{ fontWeight: 700, fontSize: '1.1rem', marginBottom: '0.5rem', color: 'var(--color-text)' }}>
+        Abonnement requis
+      </p>
+      <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', maxWidth: '320px', margin: '0 auto 1.5rem' }}>
+        Choisissez un plan pour accéder à plus de 500 fournisseurs vérifiés.
+      </p>
+      <a
+        href="/#pricing"
+        style={{ display: 'inline-block', padding: '0.7rem 1.6rem', background: 'var(--color-gold)', color: '#fff', borderRadius: '8px', fontWeight: 600, textDecoration: 'none', fontSize: '0.95rem' }}
+      >
+        Voir les plans →
+      </a>
     </div>
   )
 }

@@ -57,27 +57,9 @@ export const ensureUser = mutation({
 
     if (existing) return existing._id
 
-    // Check if a placeholder record exists for this email (subscriber who paid before signing up)
-    const email = identity.email ?? ''
-    if (email) {
-      const placeholder = await ctx.db
-        .query('users')
-        .withIndex('by_clerkId', (q) => q.eq('clerkId', `placeholder:${email}`))
-        .unique()
-      if (placeholder) {
-        // Claim the placeholder — swap in the real Clerk ID so queries work immediately
-        await ctx.db.patch(placeholder._id, {
-          clerkId: identity.subject,
-          name: identity.name ?? placeholder.name,
-          imageUrl: identity.pictureUrl ?? placeholder.imageUrl,
-        })
-        return placeholder._id
-      }
-    }
-
     return ctx.db.insert('users', {
       clerkId: identity.subject,
-      email,
+      email: identity.email ?? '',
       name: identity.name ?? undefined,
       imageUrl: identity.pictureUrl ?? undefined,
       role: 'member',
@@ -299,34 +281,6 @@ export const syncAllStripeSubscriptions = internalAction({
 export const listAllForSync = internalQuery({
   args: {},
   handler: async (ctx) => ctx.db.query('users').collect(),
-})
-
-// Find a placeholder user created by the Stripe webhook before the user signed up
-export const findByPlaceholderEmail = internalQuery({
-  args: { email: v.string() },
-  handler: async (ctx, { email }) => {
-    return ctx.db
-      .query('users')
-      .withIndex('by_clerkId', (q) => q.eq('clerkId', `placeholder:${email}`))
-      .unique()
-  },
-})
-
-// Claim a placeholder record — swap in the real Clerk ID from the Clerk webhook
-export const claimPlaceholder = internalMutation({
-  args: {
-    userId: v.id('users'),
-    clerkId: v.string(),
-    name: v.optional(v.string()),
-    imageUrl: v.optional(v.string()),
-  },
-  handler: async (ctx, { userId, clerkId, name, imageUrl }) => {
-    await ctx.db.patch(userId, {
-      clerkId,
-      ...(name ? { name } : {}),
-      ...(imageUrl ? { imageUrl } : {}),
-    })
-  },
 })
 
 // Internal-only: set super_admin by email, no auth required (used by HTTP bootstrap endpoint)

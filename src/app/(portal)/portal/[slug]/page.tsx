@@ -51,7 +51,10 @@ export default function PortalPage({ params }: { params: Promise<{ slug: string 
         <div className={styles.feed}>
           <div style={{ padding: '3rem 1rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>
             <p style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>🔒</p>
-            <p>Abonnement requis pour accéder à ce contenu.</p>
+            <p style={{ marginBottom: '1rem' }}>Abonnement requis pour accéder à ce contenu.</p>
+            <a href="/#pricing" style={{ display: 'inline-block', padding: '0.6rem 1.4rem', background: 'var(--color-gold)', color: '#fff', borderRadius: '8px', fontWeight: 600, textDecoration: 'none', fontSize: '0.9rem' }}>
+              Voir les plans →
+            </a>
           </div>
         </div>
       )}

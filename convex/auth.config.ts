@@ -1,7 +1,7 @@
 export default {
   providers: [
     {
-      domain: 'https://clerk.jengasuppliers.com',
+      domain: process.env.CLERK_FRONTEND_API_URL ?? 'https://clerk.jengasuppliers.com',
       applicationID: 'convex',
     },
   ],

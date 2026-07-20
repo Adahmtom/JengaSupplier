@@ -34,6 +34,9 @@ export default function WarehouseVideosPage() {
       {drops === null && (
         <div className={styles.empty}>
           <p>🔒 {lang === 'fr' ? 'Abonnement requis.' : 'Subscription required.'}</p>
+          <a href="/#pricing" style={{ display: 'inline-block', marginTop: '1rem', padding: '0.6rem 1.4rem', background: 'var(--color-gold)', color: '#fff', borderRadius: '8px', fontWeight: 600, textDecoration: 'none', fontSize: '0.9rem' }}>
+            {lang === 'fr' ? 'Voir les plans →' : 'See plans →'}
+          </a>
         </div>
       )}
 
