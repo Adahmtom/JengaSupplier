@@ -12,14 +12,13 @@ export async function getUserByClerkId(ctx: QueryCtx | MutationCtx, clerkId: str
 }
 
 export async function getActiveSubscription(ctx: QueryCtx | MutationCtx, userId: Id<'users'>) {
-  const sub = await ctx.db
+  const subs = await ctx.db
     .query('subscriptions')
     .withIndex('by_userId', (q) => q.eq('userId', userId))
-    .unique()
+    .collect()
 
-  if (!sub) return null
-  if (sub.status === 'active' || sub.status === 'trialing') return sub
-  return null
+  // Prefer active/trialing; tolerate duplicate rows from payment retries
+  return subs.find((s) => s.status === 'active' || s.status === 'trialing') ?? null
 }
 
 export async function requireAuth(ctx: QueryCtx | MutationCtx) {

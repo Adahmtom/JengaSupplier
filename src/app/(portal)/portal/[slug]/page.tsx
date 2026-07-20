@@ -39,11 +39,20 @@ export default function PortalPage({ params }: { params: Promise<{ slug: string 
         </Link>
       )}
 
-      {!drops && (
+      {drops === undefined && (
         <div className={styles.feed}>
           {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className={styles.skeletonCard} />
           ))}
+        </div>
+      )}
+
+      {drops === null && (
+        <div className={styles.feed}>
+          <div style={{ padding: '3rem 1rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+            <p style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>🔒</p>
+            <p>Abonnement requis pour accéder à ce contenu.</p>
+          </div>
         </div>
       )}
 

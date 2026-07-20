@@ -69,7 +69,7 @@ http.route({
           const customerEmail = session.customer_details?.email ?? (subscription.customer as any)?.email
           const customerName = session.customer_details?.name ?? ''
           if (customerEmail) {
-            const provisionedId = await ctx.runAction(internal.seedNewSuppliers.provisionSubscriberByEmail, {
+            await ctx.runAction(internal.seedNewSuppliers.provisionSubscriberByEmail, {
               email: customerEmail,
               name: customerName,
               stripeCustomerId: customerId,

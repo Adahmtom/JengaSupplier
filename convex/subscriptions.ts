@@ -5,10 +5,11 @@ import { requireAuth } from './_helpers'
 export const getSubscriptionQuery = query({
   args: { userId: v.id('users') },
   handler: async (ctx, { userId }) => {
-    return ctx.db
+    const subs = await ctx.db
       .query('subscriptions')
       .withIndex('by_userId', (q) => q.eq('userId', userId))
-      .unique()
+      .collect()
+    return subs.find((s) => s.status === 'active' || s.status === 'trialing') ?? subs[0] ?? null
   },
 })
 
@@ -24,10 +25,11 @@ export const getMySubscription = query({
       .unique()
     if (!user) return null
 
-    return ctx.db
+    const subs = await ctx.db
       .query('subscriptions')
       .withIndex('by_userId', (q) => q.eq('userId', user._id))
-      .unique()
+      .collect()
+    return subs.find((s) => s.status === 'active' || s.status === 'trialing') ?? subs[0] ?? null
   },
 })
 
@@ -51,10 +53,11 @@ export const upsertSubscription = internalMutation({
     cancelAtPeriodEnd: v.boolean(),
   },
   handler: async (ctx, args) => {
-    const existing = await ctx.db
+    const subs = await ctx.db
       .query('subscriptions')
       .withIndex('by_userId', (q) => q.eq('userId', args.userId))
-      .unique()
+      .collect()
+    const existing = subs.find((s) => s.stripeSubscriptionId === args.stripeSubscriptionId) ?? subs[0]
 
     if (existing) {
       await ctx.db.patch(existing._id, {
