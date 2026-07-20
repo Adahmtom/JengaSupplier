@@ -1,4 +1,4 @@
-import { internalAction } from './_generated/server'
+import { internalAction, internalMutation, internalQuery } from './_generated/server'
 import { v } from 'convex/values'
 import { internal } from './_generated/api'
 
@@ -198,5 +198,121 @@ export const selfHealForUser = internalAction({
       console.log(`[backfill] selfHealForUser healed userId=${userId} clerkId=${clerkId} email=${email} subId=${active.id}`)
       return
     }
+  },
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// provisionUnmatchedUsers
+//
+// Run once from Convex dashboard after reconcileStripeSubscriptions produces
+// an unmatched list. For each entry:
+//   1. Queries Clerk Admin API by email to find if the user signed up
+//   2. If found in Clerk → upserts Convex user + subscription (immediate access)
+//   3. If NOT in Clerk yet → records as "pending" (selfHealForUser will fire
+//      automatically when they sign up with the same email)
+//
+// Returns three lists:
+//   provisioned  — healed now (were in Clerk, matched by email)
+//   pending      — not yet in Clerk; self-heal will handle on first sign-in
+//   failed       — Clerk lookup errored; retry manually
+// ─────────────────────────────────────────────────────────────────────────────
+export const provisionUnmatchedUsers = internalAction({
+  args: {
+    unmatched: v.array(v.object({
+      subscriptionId: v.string(),
+      customerId: v.string(),
+      email: v.optional(v.string()),
+    })),
+  },
+  handler: async (ctx, { unmatched }): Promise<{
+    provisioned: string[]
+    pending: string[]
+    failed: Array<{ email: string; error: string }>
+  }> => {
+    const clerkKey = process.env.CLERK_SECRET_KEY
+    const stripeKey = process.env.STRIPE_SECRET_KEY
+    if (!clerkKey) throw new Error('CLERK_SECRET_KEY not set in Convex env')
+    if (!stripeKey) throw new Error('STRIPE_SECRET_KEY not set in Convex env')
+
+    const provisioned: string[] = []
+    const pending: string[] = []
+    const failed: Array<{ email: string; error: string }> = []
+
+    for (const entry of unmatched) {
+      const email = entry.email
+      if (!email) { pending.push('(no email)'); continue }
+
+      try {
+        // 1. Look up user in Clerk by email
+        const clerkRes = await fetch(
+          `https://api.clerk.com/v1/users?email_address=${encodeURIComponent(email)}&limit=1`,
+          { headers: { Authorization: `Bearer ${clerkKey}` } },
+        )
+        if (!clerkRes.ok) throw new Error(`Clerk API ${clerkRes.status}`)
+        const clerkUsers = (await clerkRes.json()) as Array<{
+          id: string
+          email_addresses: Array<{ email_address: string; id: string }>
+          primary_email_address_id: string | null
+          first_name: string | null
+          last_name: string | null
+          image_url: string | null
+        }>
+
+        if (clerkUsers.length === 0) {
+          // Not in Clerk yet — selfHealForUser handles them on first sign-in
+          pending.push(email)
+          console.log(`[backfill] provisionUnmatched pending (not in Clerk): ${email}`)
+          continue
+        }
+
+        const cu = clerkUsers[0]
+        const primaryEmail = cu.email_addresses.find((e) => e.id === cu.primary_email_address_id)
+        const resolvedEmail = primaryEmail?.email_address ?? email
+        const name = [cu.first_name, cu.last_name].filter(Boolean).join(' ') || undefined
+
+        // 2. Upsert the Convex user record
+        const userId = await ctx.runMutation(internal.users.upsertUser, {
+          clerkId: cu.id,
+          email: resolvedEmail,
+          name,
+          imageUrl: cu.image_url ?? undefined,
+        })
+
+        // 3. Retrieve the Stripe subscription for accurate current data
+        const subRes = await fetch(
+          `https://api.stripe.com/v1/subscriptions/${entry.subscriptionId}`,
+          { headers: { Authorization: `Bearer ${stripeKey}` } },
+        )
+        if (!subRes.ok) throw new Error(`Stripe API ${subRes.status}`)
+        const sub = (await subRes.json()) as {
+          id: string
+          status: string
+          customer: string
+          items: { data: Array<{ price: { id: string } }> }
+          current_period_end: number
+          cancel_at_period_end: boolean
+        }
+
+        await ctx.runMutation(internal.subscriptions.upsertSubscription, {
+          userId: userId as any,
+          stripeCustomerId: entry.customerId,
+          stripeSubscriptionId: sub.id,
+          stripePriceId: sub.items.data[0]?.price?.id ?? '',
+          status: sub.status as 'active' | 'trialing' | 'past_due' | 'canceled' | 'incomplete' | 'incomplete_expired' | 'unpaid' | 'paused',
+          currentPeriodEnd: sub.current_period_end * 1000,
+          cancelAtPeriodEnd: sub.cancel_at_period_end,
+        })
+
+        provisioned.push(email)
+        console.log(`[backfill] provisionUnmatched provisioned: ${email} clerkId=${cu.id} subId=${sub.id}`)
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err)
+        failed.push({ email, error: msg })
+        console.error(`[backfill] provisionUnmatched failed: ${email} — ${msg}`)
+      }
+    }
+
+    console.log(`[backfill] provisionUnmatched done: provisioned=${provisioned.length} pending=${pending.length} failed=${failed.length}`)
+    return { provisioned, pending, failed }
   },
 })
