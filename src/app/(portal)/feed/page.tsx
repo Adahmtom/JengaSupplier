@@ -17,20 +17,57 @@ export default function FeedPage() {
   const activateSubscription = useAction(api.stripe.activateGuestSubscription)
   const me = useQuery(api.users.getMe)
   const activated = useRef(false)
+  const retryTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const searchParams = useSearchParams()
 
-  // Activate subscription eagerly — check URL session_id first, then sessionStorage
+  // Persist session_id from URL to localStorage immediately on mount
   useEffect(() => {
-    if (activated.current || !me) return
+    const urlSessionId = searchParams.get('session_id')
+    if (urlSessionId) {
+      try { localStorage.setItem('jenga_stripe_session', urlSessionId) } catch {}
+    }
+  }, [searchParams])
+
+  // Activate subscription — retries every 4s up to 8 times if it fails
+  useEffect(() => {
+    if (activated.current) return
+
     let sessionId = searchParams.get('session_id') ?? ''
+    if (!sessionId) {
+      try { sessionId = localStorage.getItem('jenga_stripe_session') ?? '' } catch {}
+    }
     if (!sessionId) {
       try { sessionId = sessionStorage.getItem('jenga_stripe_session') ?? '' } catch {}
     }
     if (!sessionId) return
-    activated.current = true
-    try { sessionStorage.removeItem('jenga_stripe_session') } catch {}
-    activateSubscription({ sessionId }).catch(() => {})
-  }, [me, activateSubscription, searchParams])
+
+    let attempts = 0
+    const MAX_ATTEMPTS = 8
+
+    const tryActivate = () => {
+      // Wait until we have a user identity (me !== undefined means query resolved)
+      if (me === undefined) {
+        retryTimer.current = setTimeout(tryActivate, 1000)
+        return
+      }
+      if (attempts >= MAX_ATTEMPTS) return
+      attempts++
+      activateSubscription({ sessionId })
+        .then(() => {
+          activated.current = true
+          try { localStorage.removeItem('jenga_stripe_session') } catch {}
+          try { sessionStorage.removeItem('jenga_stripe_session') } catch {}
+        })
+        .catch(() => {
+          // Retry after 4s
+          retryTimer.current = setTimeout(tryActivate, 4000)
+        })
+    }
+
+    tryActivate()
+    return () => { if (retryTimer.current) clearTimeout(retryTimer.current) }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [me])
 
   const portalMap = useMemo(
     () => new Map(portals?.map((p) => [p._id, p]) ?? []),
@@ -127,24 +164,8 @@ export default function FeedPage() {
         </p>
       )}
 
-      {/* Subscription syncing — payment received but webhook not yet processed */}
-      {noSubscription && (
-        <div className={styles.empty} style={{ padding: '3rem 1rem', textAlign: 'center' }}>
-          <p style={{ fontSize: '2rem', marginBottom: '1rem' }}>⏳</p>
-          <p style={{ fontWeight: 700, marginBottom: '0.5rem', color: 'var(--color-text)' }}>
-            Activation de votre abonnement en cours…
-          </p>
-          <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
-            Votre paiement a bien été reçu. Votre accès sera disponible dans quelques secondes.
-          </p>
-          <button
-            onClick={() => window.location.reload()}
-            style={{ padding: '0.6rem 1.4rem', background: 'var(--color-gold)', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}
-          >
-            Actualiser
-          </button>
-        </div>
-      )}
+      {/* Subscription syncing — payment received but not yet active in Convex */}
+      {noSubscription && <SubscriptionSyncing />}
 
       {/* Loading skeletons */}
       {isLoading && (
@@ -185,6 +206,31 @@ export default function FeedPage() {
           ))}
         </div>
       )}
+    </div>
+  )
+}
+
+function SubscriptionSyncing() {
+  const [dots, setDots] = useState('.')
+  useEffect(() => {
+    const id = setInterval(() => setDots((d) => d.length >= 3 ? '.' : d + '.'), 600)
+    return () => clearInterval(id)
+  }, [])
+  return (
+    <div style={{ padding: '4rem 1rem', textAlign: 'center' }}>
+      <p style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>✦</p>
+      <p style={{ fontWeight: 700, fontSize: '1.1rem', marginBottom: '0.5rem', color: 'var(--color-text)' }}>
+        Activation de votre accès{dots}
+      </p>
+      <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', maxWidth: '320px', margin: '0 auto 1.5rem' }}>
+        Votre paiement a été confirmé. Votre vault s&apos;ouvre dans quelques secondes.
+      </p>
+      <button
+        onClick={() => window.location.reload()}
+        style={{ padding: '0.6rem 1.4rem', background: 'var(--color-gold)', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', fontSize: '0.9rem' }}
+      >
+        Actualiser maintenant
+      </button>
     </div>
   )
 }

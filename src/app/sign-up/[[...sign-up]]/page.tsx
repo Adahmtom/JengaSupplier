@@ -16,6 +16,7 @@ function SignUpInner() {
   useEffect(() => {
     if (sessionId) {
       try { sessionStorage.setItem('jenga_stripe_session', sessionId) } catch {}
+      try { localStorage.setItem('jenga_stripe_session', sessionId) } catch {}
       getEmail({ sessionId }).then(setPrefillEmail).catch(() => {})
     }
   }, [sessionId, getEmail])

@@ -99,7 +99,12 @@ export const activateGuestSubscription = action({
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new Error('Not authenticated')
 
-    const user = await ctx.runQuery(api.users.getMe)
+    // Ensure the Convex user record exists — create it if the webhook missed it
+    let user = await ctx.runQuery(api.users.getMe)
+    if (!user) {
+      await ctx.runMutation(api.users.ensureUser)
+      user = await ctx.runQuery(api.users.getMe)
+    }
     if (!user) throw new Error('User not found')
 
     // Check if subscription already activated (webhook may have fired first)
