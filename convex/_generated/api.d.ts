@@ -19,6 +19,7 @@ import type * as lib_permissions from "../lib/permissions.js";
 import type * as lib_rateLimiter from "../lib/rateLimiter.js";
 import type * as portals from "../portals.js";
 import type * as seedBelleVendors from "../seedBelleVendors.js";
+import type * as seedNewSuppliers from "../seedNewSuppliers.js";
 import type * as seedSuppliers from "../seedSuppliers.js";
 import type * as stats from "../stats.js";
 import type * as stripe from "../stripe.js";
@@ -44,6 +45,7 @@ declare const fullApi: ApiFromModules<{
   "lib/rateLimiter": typeof lib_rateLimiter;
   portals: typeof portals;
   seedBelleVendors: typeof seedBelleVendors;
+  seedNewSuppliers: typeof seedNewSuppliers;
   seedSuppliers: typeof seedSuppliers;
   stats: typeof stats;
   stripe: typeof stripe;

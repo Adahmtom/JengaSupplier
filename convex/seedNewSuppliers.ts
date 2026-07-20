@@ -10,6 +10,49 @@ export const findAdmin = internalQuery({
   },
 })
 
+export const diagnoseProd = internalAction({
+  args: {},
+  handler: async (ctx): Promise<Record<string, unknown>> => {
+    const users: Array<{ _id: string }> = await ctx.runQuery(internal.users.listAllForSync)
+    const subs: Array<{ status: string }> = await ctx.runQuery(internal.seedNewSuppliers.listAllSubs)
+    const drops: Array<{ isPublished: boolean }> = await ctx.runQuery(internal.seedNewSuppliers.listAllDrops)
+    const posts: Array<{ _id: string }> = await ctx.runQuery(internal.seedNewSuppliers.listAllPosts)
+
+    const subByStatus: Record<string, number> = {}
+    for (const s of subs) {
+      subByStatus[s.status] = (subByStatus[s.status] ?? 0) + 1
+    }
+
+    return {
+      totalUsers: users.length,
+      totalSubs: subs.length,
+      subsByStatus: subByStatus,
+      usersWithActiveSub: subs.filter((s) => s.status === 'active' || s.status === 'trialing').length,
+      totalDrops: drops.length,
+      publishedDrops: drops.filter((d) => d.isPublished).length,
+      totalCommunityPosts: posts.length,
+    }
+  },
+})
+
+export const listAllSubs = internalQuery({
+  args: {},
+  handler: async (ctx): Promise<Array<{ status: string }>> =>
+    ctx.db.query('subscriptions').collect(),
+})
+
+export const listAllDrops = internalQuery({
+  args: {},
+  handler: async (ctx): Promise<Array<{ isPublished: boolean }>> =>
+    ctx.db.query('drops').collect(),
+})
+
+export const listAllPosts = internalQuery({
+  args: {},
+  handler: async (ctx): Promise<Array<{ _id: string }>> =>
+    ctx.db.query('communityPosts').collect(),
+})
+
 export const ensurePortal = internalMutation({
   args: { slug: v.string(), name: v.string(), emoji: v.string(), order: v.number() },
   handler: async (ctx, { slug, name, emoji, order }) => {
@@ -128,5 +171,450 @@ export const run = internalAction({
     await insert('emballages', 'AAAAA Factory', '🏭 Produits divers en gros', '+86 185 5959 3963')
 
     return 'Done — all new suppliers added'
+  },
+})
+
+export const upsertUserByEmail = internalMutation({
+  args: { email: v.string(), name: v.optional(v.string()) },
+  handler: async (ctx, { email, name }): Promise<string> => {
+    const existing = await ctx.db
+      .query('users')
+      .filter((q) => q.eq(q.field('email'), email))
+      .first()
+    if (existing) return existing._id
+    return ctx.db.insert('users', {
+      clerkId: `placeholder:${email}`,
+      email,
+      name: name ?? email.split('@')[0],
+      role: 'member',
+    })
+  },
+})
+
+export const patchPostAuthor = internalMutation({
+  args: { postId: v.id('communityPosts'), authorId: v.id('users') },
+  handler: async (ctx, { postId, authorId }) => {
+    await ctx.db.patch(postId, { authorId })
+  },
+})
+
+export const listPostsForAdmin = internalQuery({
+  args: {},
+  handler: async (ctx): Promise<Array<{ _id: string; authorId: string; body: string }>> =>
+    ctx.db.query('communityPosts').collect(),
+})
+
+// Re-assigns community posts from system account to their real authors.
+// For dev users not yet in prod, creates a placeholder Convex user with real name/email.
+export const fixPostAuthors = internalAction({
+  args: {
+    devPosts: v.array(v.object({
+      body: v.string(),
+      authorEmail: v.string(),
+      authorName: v.optional(v.string()),
+    })),
+  },
+  handler: async (ctx, { devPosts }): Promise<Record<string, unknown>> => {
+    // Get current prod Convex users
+    const prodUsers: Array<{ _id: string; email: string }> = await ctx.runQuery(internal.users.listAllForSync)
+    const prodUserByEmail = new Map(prodUsers.map((u) => [u.email.toLowerCase(), u._id]))
+
+    // Get all community posts
+    const allPosts: Array<{ _id: string; authorId: string; body: string }> =
+      await ctx.runQuery(internal.seedNewSuppliers.listPostsForAdmin)
+
+    // Build a map of post body → postId for quick lookup
+    // (use body as key since that's all we have from dev export)
+    const postsByBody = new Map<string, string>()
+    for (const p of allPosts) postsByBody.set(p.body, p._id)
+
+    let fixed = 0
+    let created = 0
+    let notFound = 0
+
+    for (const devPost of devPosts) {
+      const postId = postsByBody.get(devPost.body)
+      if (!postId) { notFound++; continue }
+
+      let prodUserId = prodUserByEmail.get(devPost.authorEmail.toLowerCase())
+
+      if (!prodUserId) {
+        // Create placeholder user with real name & email so post shows correct author
+        const newId: string = await ctx.runMutation(internal.seedNewSuppliers.upsertUserByEmail, {
+          email: devPost.authorEmail,
+          name: devPost.authorName,
+        })
+        prodUserId = newId
+        prodUserByEmail.set(devPost.authorEmail.toLowerCase(), newId)
+        created++
+      }
+
+      await ctx.runMutation(internal.seedNewSuppliers.patchPostAuthor, {
+        postId: postId as Id<'communityPosts'>,
+        authorId: prodUserId as Id<'users'>,
+      })
+      fixed++
+    }
+
+    return { fixed, created, notFound }
+  },
+})
+
+// Bulk-import community posts. Called from importCommunityPosts action.
+export const bulkImportCommunityPosts = internalAction({
+  args: {
+    posts: v.array(v.object({
+      body: v.string(),
+      authorEmail: v.string(),
+    })),
+  },
+  handler: async (ctx, { posts }): Promise<Record<string, unknown>> => {
+    const prodUsers: Array<{ _id: string; email: string }> = await ctx.runQuery(internal.users.listAllForSync)
+    const prodUserByEmail = new Map(prodUsers.map((u) => [u.email.toLowerCase(), u._id]))
+
+    const admin = await ctx.runQuery(internal.seedNewSuppliers.findAdmin)
+    if (!admin) throw new Error('No super_admin found in prod')
+
+    let imported = 0
+    let noUser = 0
+
+    for (const post of posts) {
+      const prodAuthorId = prodUserByEmail.get(post.authorEmail.toLowerCase()) ?? admin._id
+      if (!prodUserByEmail.has(post.authorEmail.toLowerCase())) noUser++
+
+      await ctx.runMutation(internal.community.importPost, {
+        authorId: prodAuthorId as Id<'users'>,
+        body: post.body,
+        creationTime: Date.now(),
+      })
+      imported++
+    }
+
+    return { imported, noUser }
+  },
+})
+
+// ── Export queries (for dev → prod migration) ─────────────────────────────────
+
+export const listAllReplies = internalQuery({
+  args: {},
+  handler: async (ctx): Promise<Array<{ _id: string; postId: string; authorId: string; body: string }>> =>
+    ctx.db.query('communityReplies').collect(),
+})
+
+export const listAllReactions = internalQuery({
+  args: {},
+  handler: async (ctx): Promise<Array<{ _id: string; postId: string; userId: string; emoji: string }>> =>
+    ctx.db.query('communityReactions').collect(),
+})
+
+export const listAllComments = internalQuery({
+  args: {},
+  handler: async (ctx): Promise<Array<{ _id: string; dropId: string; userId: string; body: string }>> =>
+    ctx.db.query('comments').collect(),
+})
+
+export const listAllLikes = internalQuery({
+  args: {},
+  handler: async (ctx): Promise<Array<{ _id: string; dropId: string; userId: string }>> =>
+    ctx.db.query('likes').collect(),
+})
+
+export const listAllWaitlist = internalQuery({
+  args: {},
+  handler: async (ctx): Promise<Array<{ name: string; email: string; phone: string; service: string }>> =>
+    ctx.db.query('waitlist').collect(),
+})
+
+export const listAllDropsFull = internalQuery({
+  args: {},
+  handler: async (ctx) => ctx.db.query('drops').collect(),
+})
+
+// ── Import mutations ──────────────────────────────────────────────────────────
+
+export const importReply = internalMutation({
+  args: { postId: v.id('communityPosts'), authorId: v.id('users'), body: v.string() },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query('communityReplies')
+      .withIndex('by_post', (q) => q.eq('postId', args.postId))
+      .filter((q) => q.and(q.eq(q.field('authorId'), args.authorId), q.eq(q.field('body'), args.body)))
+      .first()
+    if (existing) return existing._id
+    return ctx.db.insert('communityReplies', args)
+  },
+})
+
+export const importReaction = internalMutation({
+  args: { postId: v.id('communityPosts'), userId: v.id('users'), emoji: v.string() },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query('communityReactions')
+      .withIndex('by_post_user_emoji', (q) =>
+        q.eq('postId', args.postId).eq('userId', args.userId).eq('emoji', args.emoji))
+      .first()
+    if (existing) return existing._id
+    return ctx.db.insert('communityReactions', args)
+  },
+})
+
+export const importComment = internalMutation({
+  args: { dropId: v.id('drops'), userId: v.id('users'), body: v.string() },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query('comments')
+      .withIndex('by_drop', (q) => q.eq('dropId', args.dropId))
+      .filter((q) => q.and(q.eq(q.field('userId'), args.userId), q.eq(q.field('body'), args.body)))
+      .first()
+    if (existing) return existing._id
+    return ctx.db.insert('comments', args)
+  },
+})
+
+export const importWaitlistEntry = internalMutation({
+  args: { name: v.string(), email: v.string(), phone: v.string(), service: v.string() },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query('waitlist')
+      .withIndex('by_email', (q) => q.eq('email', args.email))
+      .first()
+    if (existing) return existing._id
+    return ctx.db.insert('waitlist', args)
+  },
+})
+
+export const importDrop = internalMutation({
+  args: {
+    portalSlug: v.string(),
+    authorId: v.id('users'),
+    title: v.string(),
+    body: v.string(),
+    phone: v.union(v.string(), v.null()),
+    isAlert: v.boolean(),
+    isPinned: v.boolean(),
+    isVerified: v.boolean(),
+    isPublished: v.boolean(),
+  },
+  handler: async (ctx, { portalSlug, authorId, title, body, phone, isAlert, isPinned, isVerified, isPublished }) => {
+    const portal = await ctx.db.query('portals').filter((q) => q.eq(q.field('slug'), portalSlug)).first()
+    if (!portal) throw new Error(`Portal not found: ${portalSlug}`)
+    const existing = await ctx.db
+      .query('drops')
+      .withIndex('by_published_portal', (q) => q.eq('isPublished', isPublished).eq('portalId', portal._id))
+      .filter((q) => q.eq(q.field('title'), title))
+      .first()
+    if (existing) return existing._id
+    return ctx.db.insert('drops', { portalId: portal._id, authorId, title, body, phone: phone ?? undefined, isAlert, isPinned, isVerified, isPublished })
+  },
+})
+
+export const importVideoDropWithStorageId = internalMutation({
+  args: {
+    portalId: v.id('portals'),
+    authorId: v.id('users'),
+    title: v.string(),
+    body: v.string(),
+    videoStorageId: v.id('_storage'),
+    isAlert: v.boolean(),
+    isPinned: v.boolean(),
+    isVerified: v.boolean(),
+    isPublished: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query('drops')
+      .filter((q) => q.eq(q.field('title'), args.title))
+      .first()
+    if (existing) return existing._id
+    const { portalId, authorId, title, body, videoStorageId, isAlert, isPinned, isVerified, isPublished } = args
+    return ctx.db.insert('drops', { portalId, authorId, title, body, videoStorageId, isAlert, isPinned, isVerified, isPublished })
+  },
+})
+
+export const getFirstPortal = internalQuery({
+  args: {},
+  handler: async (ctx): Promise<{ _id: string } | null> =>
+    ctx.db.query('portals').withIndex('by_order').first(),
+})
+
+export const getVideoUrl = internalQuery({
+  args: { storageId: v.id('_storage') },
+  handler: async (ctx, { storageId }): Promise<string | null> => ctx.storage.getUrl(storageId),
+})
+
+export const generateMigrationUploadUrl = internalMutation({
+  args: {},
+  handler: async (ctx): Promise<string> => ctx.storage.generateUploadUrl(),
+})
+
+export const setUserRole = internalMutation({
+  args: { userId: v.id('users'), role: v.union(v.literal('super_admin'), v.literal('admin'), v.literal('moderator'), v.literal('member')) },
+  handler: async (ctx, { userId, role }) => ctx.db.patch(userId, { role }),
+})
+
+export const moveVideoDropsToPortal = internalMutation({
+  args: { portalSlug: v.string() },
+  handler: async (ctx, { portalSlug }): Promise<Record<string, unknown>> => {
+    // Find or create the portal
+    let portal = await ctx.db.query('portals').filter(q => q.eq(q.field('slug'), portalSlug)).first()
+    if (!portal) {
+      const id = await ctx.db.insert('portals', {
+        name: 'Vidéos Entrepôt · Warehouse Videos',
+        slug: portalSlug,
+        emoji: '🎥',
+        order: 99,
+        isActive: true,
+      })
+      portal = await ctx.db.get(id)
+    }
+    // Move all video drops to this portal
+    const allDrops = await ctx.db.query('drops').collect()
+    const videoDrops = allDrops.filter(d => d.videoStorageId)
+    for (const drop of videoDrops) {
+      await ctx.db.patch(drop._id, { portalId: portal!._id })
+    }
+    return { portalId: portal!._id, moved: videoDrops.length }
+  },
+})
+
+// ── Full migration action — migrates replies, reactions, comments, waitlist, drops, videos ──
+
+export const fullMigration = internalAction({
+  args: {
+    devDeploymentUrl: v.string(),
+    // Serialised export data passed in from local script
+    replies: v.array(v.object({ postBody: v.string(), authorEmail: v.string(), body: v.string() })),
+    reactions: v.array(v.object({ postBody: v.string(), userEmail: v.string(), emoji: v.string() })),
+    comments: v.array(v.object({ dropTitle: v.string(), userEmail: v.string(), body: v.string() })),
+    waitlist: v.array(v.object({ name: v.string(), email: v.string(), phone: v.string(), service: v.string() })),
+    drops: v.array(v.object({
+      title: v.string(),
+      body: v.string(),
+      portalSlug: v.string(),
+      authorEmail: v.string(),
+      phone: v.union(v.string(), v.null()),
+      isAlert: v.boolean(),
+      isPinned: v.boolean(),
+      isVerified: v.boolean(),
+      isPublished: v.boolean(),
+    })),
+    videoDrops: v.array(v.object({
+      title: v.string(),
+      body: v.string(),
+      authorEmail: v.string(),
+      devStorageId: v.string(),
+      isAlert: v.boolean(),
+      isPinned: v.boolean(),
+      isVerified: v.boolean(),
+      isPublished: v.boolean(),
+    })),
+  },
+  handler: async (ctx, args): Promise<Record<string, unknown>> => {
+    // Build lookup maps
+    const prodUsers: Array<{ _id: string; email: string }> = await ctx.runQuery(internal.users.listAllForSync)
+    const byEmail = new Map(prodUsers.map((u) => [u.email.toLowerCase(), u._id]))
+
+    const admin = await ctx.runQuery(internal.seedNewSuppliers.findAdmin)
+    if (!admin) throw new Error('No super_admin')
+    const adminId = admin._id as Id<'users'>
+
+    const uid = (email: string): Id<'users'> =>
+      (byEmail.get(email.toLowerCase()) ?? adminId) as Id<'users'>
+
+    const allPosts: Array<{ _id: string; body: string }> = await ctx.runQuery(internal.seedNewSuppliers.listPostsForAdmin)
+    const postByBody = new Map(allPosts.map((p) => [p.body, p._id as Id<'communityPosts'>]))
+
+    const allDrops: Array<{ _id: string; title: string }> = await ctx.runQuery(internal.seedNewSuppliers.listAllDropsFull)
+    const dropByTitle = new Map(allDrops.map((d) => [d.title, d._id as Id<'drops'>]))
+
+    const results: Record<string, number> = {
+      drops: 0, replies: 0, reactions: 0, comments: 0, waitlist: 0, videos: 0,
+      dropsSkipped: 0, repliesSkipped: 0,
+    }
+
+    // 1. Drops (non-video)
+    for (const d of args.drops) {
+      if (dropByTitle.has(d.title)) { results.dropsSkipped++; continue }
+      try {
+        const newId: string = await ctx.runMutation(internal.seedNewSuppliers.importDrop, {
+          portalSlug: d.portalSlug,
+          authorId: uid(d.authorEmail),
+          title: d.title,
+          body: d.body,
+          phone: d.phone,
+          isAlert: d.isAlert,
+          isPinned: d.isPinned,
+          isVerified: d.isVerified,
+          isPublished: d.isPublished,
+        })
+        dropByTitle.set(d.title, newId as Id<'drops'>)
+        results.drops++
+      } catch { results.dropsSkipped++ }
+    }
+
+    // 2. Video drops — download from dev, re-upload to prod
+    const firstPortal: { _id: string } | null = await ctx.runQuery(internal.seedNewSuppliers.getFirstPortal)
+    for (const v of args.videoDrops) {
+      try {
+        const srcUrl = `${args.devDeploymentUrl}/api/storage/${v.devStorageId}`
+        const res = await fetch(srcUrl)
+        if (!res.ok) continue
+        const blob = await res.blob()
+        const uploadUrl: string = await ctx.runMutation(internal.seedNewSuppliers.generateMigrationUploadUrl)
+        const upRes = await fetch(uploadUrl, { method: 'POST', headers: { 'Content-Type': blob.type }, body: blob })
+        const { storageId } = await upRes.json() as { storageId: string }
+        await ctx.runMutation(internal.seedNewSuppliers.importVideoDropWithStorageId, {
+          portalId: (firstPortal?._id ?? '') as Id<'portals'>,
+          authorId: uid(v.authorEmail),
+          title: v.title,
+          body: v.body,
+          videoStorageId: storageId as Id<'_storage'>,
+          isAlert: v.isAlert,
+          isPinned: v.isPinned ?? false,
+          isVerified: v.isVerified,
+          isPublished: v.isPublished,
+        })
+        results.videos++
+      } catch { /* skip failed video */ }
+    }
+
+    // 3. Replies
+    for (const r of args.replies) {
+      const postId = postByBody.get(r.postBody)
+      if (!postId) { results.repliesSkipped++; continue }
+      await ctx.runMutation(internal.seedNewSuppliers.importReply, {
+        postId, authorId: uid(r.authorEmail), body: r.body,
+      })
+      results.replies++
+    }
+
+    // 4. Reactions
+    for (const r of args.reactions) {
+      const postId = postByBody.get(r.postBody)
+      if (!postId) continue
+      await ctx.runMutation(internal.seedNewSuppliers.importReaction, {
+        postId, userId: uid(r.userEmail), emoji: r.emoji,
+      })
+      results.reactions++
+    }
+
+    // 5. Drop comments
+    for (const c of args.comments) {
+      const dropId = dropByTitle.get(c.dropTitle)
+      if (!dropId) continue
+      await ctx.runMutation(internal.seedNewSuppliers.importComment, {
+        dropId, userId: uid(c.userEmail), body: c.body,
+      })
+      results.comments++
+    }
+
+    // 6. Waitlist
+    for (const w of args.waitlist) {
+      await ctx.runMutation(internal.seedNewSuppliers.importWaitlistEntry, w)
+      results.waitlist++
+    }
+
+    return results
   },
 })

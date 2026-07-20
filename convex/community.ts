@@ -1,4 +1,4 @@
-import { mutation, query, MutationCtx, QueryCtx } from './_generated/server'
+import { internalMutation, mutation, query, MutationCtx, QueryCtx } from './_generated/server'
 import { v } from 'convex/values'
 import { internal } from './_generated/api'
 import { getUserByClerkId, getActiveSubscription } from './_helpers'
@@ -296,5 +296,30 @@ export const deleteReply = mutation({
     const isAdmin = user && ADMIN_ROLES.has(user.role)
     if (!isOwner && !isAdmin) throw new Error('Not allowed')
     await ctx.db.delete(replyId)
+  },
+})
+
+export const importPost = internalMutation({
+  args: {
+    authorId: v.id('users'),
+    body: v.string(),
+    portalId: v.optional(v.id('portals')),
+    creationTime: v.number(),
+  },
+  handler: async (ctx, { authorId, body, portalId, creationTime }) => {
+    const existing = await ctx.db
+      .query('communityPosts')
+      .filter((q) => q.and(
+        q.eq(q.field('authorId'), authorId),
+        q.eq(q.field('body'), body),
+      ))
+      .first()
+    if (existing) return existing._id
+    return ctx.db.insert('communityPosts', {
+      authorId,
+      body,
+      portalId,
+      isHidden: false,
+    })
   },
 })

@@ -35,10 +35,11 @@ export const listDrops = query({
         .withIndex('by_published_portal', (q) => q.eq('isPublished', true).eq('portalId', portalId))
         .collect()
     } else {
-      filtered = await ctx.db
+      const all = await ctx.db
         .query('drops')
         .withIndex('by_published', (q) => q.eq('isPublished', true))
         .collect()
+      filtered = all.filter((d) => !d.videoStorageId)
     }
 
     filtered.sort((a, b) => {
