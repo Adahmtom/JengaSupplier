@@ -25,8 +25,17 @@ export const createCheckoutSession = action({
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new Error('Not authenticated')
 
-    const user = await ctx.runQuery(api.users.getMe)
+    // Ensure user record exists (checkout page may arrive before Clerk webhook)
+    let user = await ctx.runQuery(api.users.getMe)
+    if (!user) {
+      await ctx.runMutation(api.users.ensureUser)
+      user = await ctx.runQuery(api.users.getMe)
+    }
     if (!user) throw new Error('User not found in Convex')
+
+    // Use identity email as authoritative fallback — user.email may be blank
+    // if ensureUser ran before Clerk populated the identity email field
+    const email = user.email?.trim() || identity.email || undefined
 
     const Stripe = (await import('stripe')).default
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2026-06-24.dahlia' })
@@ -38,7 +47,7 @@ export const createCheckoutSession = action({
       // session_id lets /feed immediately verify payment server-side before webhook arrives
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/feed?welcome=1&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/?canceled=1`,
-      customer_email: user.email,
+      ...(email ? { customer_email: email } : {}),
       // clerkUserId in metadata is the canonical link — webhook reads this
       metadata: { clerkUserId: identity.subject, plan },
       client_reference_id: identity.subject,
