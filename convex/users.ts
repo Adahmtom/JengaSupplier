@@ -78,24 +78,18 @@ export const getMe = query({
 // even if the Clerk webhook failed to fire (race conditions, misconfiguration, etc.)
 export const ensureUser = mutation({
   args: {},
-  handler: async (ctx) => {
+  handler: async (ctx): Promise<string | null> => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) return null
 
-    const existing = await ctx.db
-      .query('users')
-      .withIndex('by_clerkId', (q) => q.eq('clerkId', identity.subject))
-      .unique()
-
-    if (existing) return existing._id
-
-    return ctx.db.insert('users', {
+    // Delegate to upsertUser so placeholder migration always runs
+    const userId = await ctx.runMutation(internal.users.upsertUser, {
       clerkId: identity.subject,
       email: identity.email ?? '',
       name: identity.name ?? undefined,
       imageUrl: identity.pictureUrl ?? undefined,
-      role: 'member',
     })
+    return userId as string | null
   },
 })
 

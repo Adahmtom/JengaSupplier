@@ -418,3 +418,79 @@ export const moveSubscriptionsToUser = internalMutation({
     return sourceSubs.length
   },
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// fixBlankEmailUsers
+//
+// Finds all real Clerk users in Convex with a blank email, looks them up in
+// the Clerk API to get their real email, then calls upsertUser to patch the
+// record and trigger placeholder subscription migration.
+//
+// Run from Convex dashboard: Functions → backfill → fixBlankEmailUsers → Run
+// ─────────────────────────────────────────────────────────────────────────────
+export const fixBlankEmailUsers = internalAction({
+  args: {},
+  handler: async (ctx): Promise<{ fixed: number; report: Array<{ clerkId: string; email: string; result: string }> }> => {
+    const clerkKey = process.env.CLERK_SECRET_KEY
+    if (!clerkKey) throw new Error('CLERK_SECRET_KEY not set')
+
+    const allUsers: Array<{ _id: string; clerkId: string; email: string }> =
+      await ctx.runQuery(internal.users.listAllForSync)
+
+    // Real Clerk users (non-placeholder) with missing email
+    const broken = allUsers.filter(
+      (u) => !u.clerkId.startsWith('placeholder:') && !u.email?.trim()
+    )
+
+    console.log(`[backfill] fixBlankEmailUsers: found ${broken.length} users with blank email`)
+
+    const report: Array<{ clerkId: string; email: string; result: string }> = []
+    let fixed = 0
+
+    for (const user of broken) {
+      try {
+        const res = await fetch(`https://api.clerk.com/v1/users/${user.clerkId}`, {
+          headers: { Authorization: `Bearer ${clerkKey}` },
+        })
+        if (!res.ok) {
+          report.push({ clerkId: user.clerkId, email: '', result: `clerk error ${res.status}` })
+          continue
+        }
+
+        const cu = (await res.json()) as {
+          id: string
+          email_addresses: Array<{ email_address: string; id: string }>
+          primary_email_address_id: string | null
+          first_name: string | null
+          last_name: string | null
+          image_url: string | null
+        }
+
+        const primary = cu.email_addresses.find((e) => e.id === cu.primary_email_address_id)
+        const email = primary?.email_address ?? ''
+        if (!email) {
+          report.push({ clerkId: user.clerkId, email: '', result: 'no email in Clerk' })
+          continue
+        }
+
+        const name = [cu.first_name, cu.last_name].filter(Boolean).join(' ') || undefined
+
+        await ctx.runMutation(internal.users.upsertUser, {
+          clerkId: user.clerkId,
+          email,
+          name,
+          imageUrl: cu.image_url ?? undefined,
+        })
+
+        fixed++
+        report.push({ clerkId: user.clerkId, email, result: 'fixed' })
+        console.log(`[backfill] fixBlankEmailUsers fixed clerkId=${user.clerkId} email=${email}`)
+      } catch (err) {
+        report.push({ clerkId: user.clerkId, email: '', result: `error: ${String(err)}` })
+      }
+    }
+
+    console.log(`[backfill] fixBlankEmailUsers done: fixed=${fixed} of ${broken.length}`)
+    return { fixed, report }
+  },
+})
