@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { useAction, useQuery } from 'convex/react'
+import { useAction, useMutation, useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import styles from './checkout.module.css'
 
@@ -35,14 +35,24 @@ function resolvePlan(params: URLSearchParams): Plan | null {
 
 function CheckoutInner() {
   const createCheckout = useAction(api.stripe.createCheckoutSession)
+  const ensureUser = useMutation(api.users.ensureUser)
   const params = useSearchParams()
   const router = useRouter()
   const me = useQuery(api.users.getMe)
   const called = useRef(false)
+  const ensured = useRef(false)
+
+  // Checkout lives outside the portal layout, so PortalSidebar never runs.
+  // Call ensureUser here so the Convex user record exists before we proceed.
+  useEffect(() => {
+    if (ensured.current) return
+    ensured.current = true
+    ensureUser().catch(() => {})
+  }, [ensureUser])
 
   useEffect(() => {
     if (me === undefined) return // still loading
-    if (me === null) return      // ensureUser hasn't run yet
+    if (me === null) return      // ensureUser in flight — wait for reactive re-render
     if (called.current) return
     called.current = true
 
