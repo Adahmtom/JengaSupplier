@@ -12,6 +12,7 @@ export const upsertUser = internalMutation({
     imageUrl: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // Check if real Clerk user already exists
     const existing = await ctx.db
       .query('users')
       .withIndex('by_clerkId', (q) => q.eq('clerkId', args.clerkId))
@@ -23,10 +24,41 @@ export const upsertUser = internalMutation({
         name: args.name,
         imageUrl: args.imageUrl,
       })
+      // Migrate any subscriptions still under a placeholder for this email
+      if (args.email) {
+        const placeholder = await ctx.db
+          .query('users')
+          .withIndex('by_clerkId', (q) => q.eq('clerkId', `placeholder:${args.email}`))
+          .unique()
+        if (placeholder) {
+          await ctx.runMutation(internal.backfill.moveSubscriptionsToUser, {
+            fromUserId: placeholder._id,
+            toUserId: existing._id,
+          })
+        }
+      }
       return existing._id
     }
 
-    return ctx.db.insert('users', { ...args, role: 'member' })
+    // New user — create the record
+    const userId = await ctx.db.insert('users', { ...args, role: 'member' })
+
+    // Migrate subscriptions from placeholder (user paid before signing up)
+    if (args.email) {
+      const placeholder = await ctx.db
+        .query('users')
+        .withIndex('by_clerkId', (q) => q.eq('clerkId', `placeholder:${args.email}`))
+        .unique()
+      if (placeholder) {
+        await ctx.runMutation(internal.backfill.moveSubscriptionsToUser, {
+          fromUserId: placeholder._id,
+          toUserId: userId,
+        })
+        console.log(`[users] upsertUser migrated placeholder subs for ${args.email}`)
+      }
+    }
+
+    return userId
   },
 })
 

@@ -1,6 +1,6 @@
 import { internalAction, internalMutation, internalQuery } from './_generated/server'
 import { v } from 'convex/values'
-import { internal } from './_generated/api'
+import { internal, api } from './_generated/api'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // reconcileStripeSubscriptions
@@ -314,5 +314,107 @@ export const provisionUnmatchedUsers = internalAction({
 
     console.log(`[backfill] provisionUnmatched done: provisioned=${provisioned.length} pending=${pending.length} failed=${failed.length}`)
     return { provisioned, pending, failed }
+  },
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// migratePlaceholderSubscriptions  ← THE MAIN FIX
+//
+// Root cause: old backfill created user records with clerkId="placeholder:email"
+// and attached subscriptions to those IDs. When real users later signed in via
+// Clerk, NEW user records were created with a real clerkId — but the subscriptions
+// still point to the placeholder IDs, so getActiveSubscription finds nothing.
+//
+// This action:
+//   1. Finds all placeholder users (clerkId starts with "placeholder:")
+//   2. For each, finds the real Clerk user with the same email
+//   3. Re-points every subscription from the placeholder _id → the real user _id
+//   4. Deletes the placeholder user record
+//
+// Run from Convex dashboard: Functions → backfill → migratePlaceholderSubscriptions → Run
+// Safe to run multiple times (idempotent).
+// ─────────────────────────────────────────────────────────────────────────────
+export const migratePlaceholderSubscriptions = internalAction({
+  args: {},
+  handler: async (ctx): Promise<{
+    migrated: number
+    skipped: number   // placeholder has no matching real user yet
+    report: Array<{ email: string; result: string }>
+  }> => {
+    const allUsers: Array<{ _id: string; clerkId: string; email: string; role: string }> =
+      await ctx.runQuery(internal.users.listAllForSync)
+
+    const placeholders = allUsers.filter((u) => u.clerkId.startsWith('placeholder:'))
+    const realByEmail = new Map(
+      allUsers
+        .filter((u) => !u.clerkId.startsWith('placeholder:'))
+        .map((u) => [u.email.toLowerCase().trim(), u._id])
+    )
+
+    let migrated = 0
+    let skipped = 0
+    const report: Array<{ email: string; result: string }> = []
+
+    for (const placeholder of placeholders) {
+      const email = placeholder.email.toLowerCase().trim()
+      const realUserId = realByEmail.get(email)
+
+      if (!realUserId) {
+        // Real user hasn't signed up yet — leave placeholder for now;
+        // selfHealForUser will handle them when they do sign up
+        skipped++
+        report.push({ email, result: 'skipped — no real Clerk user yet' })
+        continue
+      }
+
+      const moved = await ctx.runMutation(internal.backfill.moveSubscriptionsToUser, {
+        fromUserId: placeholder._id as any,
+        toUserId: realUserId as any,
+      })
+
+      report.push({ email, result: `migrated ${moved} subscription(s) → real user ${realUserId}` })
+      migrated++
+      console.log(`[backfill] migrated ${moved} sub(s) for ${email}: placeholder ${placeholder._id} → real ${realUserId}`)
+    }
+
+    console.log(`[backfill] migratePlaceholderSubscriptions done: migrated=${migrated} skipped=${skipped}`)
+    return { migrated, skipped, report }
+  },
+})
+
+// Internal mutation: re-points all subscriptions from one userId to another,
+// then deletes the old (placeholder) user record.
+export const moveSubscriptionsToUser = internalMutation({
+  args: {
+    fromUserId: v.id('users'),
+    toUserId: v.id('users'),
+  },
+  handler: async (ctx, { fromUserId, toUserId }): Promise<number> => {
+    // If the target already has an active subscription, just delete the placeholder
+    const targetSubs = await ctx.db
+      .query('subscriptions')
+      .withIndex('by_userId', (q) => q.eq('userId', toUserId))
+      .collect()
+
+    const sourceSubs = await ctx.db
+      .query('subscriptions')
+      .withIndex('by_userId', (q) => q.eq('userId', fromUserId))
+      .collect()
+
+    for (const sub of sourceSubs) {
+      const alreadyExists = targetSubs.some(
+        (s) => s.stripeSubscriptionId === sub.stripeSubscriptionId
+      )
+      if (alreadyExists) {
+        await ctx.db.delete(sub._id) // duplicate — remove the placeholder's copy
+      } else {
+        await ctx.db.patch(sub._id, { userId: toUserId })
+      }
+    }
+
+    // Delete the now-empty placeholder user record
+    await ctx.db.delete(fromUserId)
+
+    return sourceSubs.length
   },
 })
