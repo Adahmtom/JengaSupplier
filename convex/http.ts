@@ -22,7 +22,7 @@ http.route({
 
     let event: import('stripe').Stripe.Event
     try {
-      event = stripe.webhooks.constructEvent(rawBody, signature, process.env.STRIPE_WEBHOOK_SECRET!)
+      event = await stripe.webhooks.constructEventAsync(rawBody, signature, process.env.STRIPE_WEBHOOK_SECRET!)
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err)
       console.error(`[stripe-webhook] signature verification failed: ${msg}`)
