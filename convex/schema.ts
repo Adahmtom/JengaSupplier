@@ -59,6 +59,13 @@ export default defineSchema({
     .index('by_stripeCustomerId', ['stripeCustomerId'])
     .index('by_stripeSubscriptionId', ['stripeSubscriptionId']),
 
+  // Tracks access notification emails sent — prevents re-sending within cooldown period
+  accessNotifications: defineTable({
+    email: v.string(),
+    type: v.union(v.literal('create_account'), v.literal('access_confirmed')),
+    sentAt: v.number(),
+  }).index('by_email', ['email']),
+
   portals: defineTable({
     name: v.string(),
     slug: v.string(),
