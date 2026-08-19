@@ -169,6 +169,7 @@ function PostCard({ post }: { post: Post }) {
   const toggleReaction = useMutation(api.community.toggleReaction)
   const deletePost = useMutation(api.community.deletePost)
   const hidePost = useMutation(api.community.hidePost)
+  const pinPost = useMutation(api.community.pinPost)
   const reportPost = useMutation(api.community.reportPost)
 
   const [showReport, setShowReport] = useState(false)
@@ -189,6 +190,11 @@ function PostCard({ post }: { post: Post }) {
     catch (err) { setActionError(err instanceof Error ? err.message : 'Erreur.') }
   }
 
+  async function handlePin() {
+    try { await pinPost({ postId: post._id, pinned: !post.isPinned }) }
+    catch (err) { setActionError(err instanceof Error ? err.message : 'Erreur.') }
+  }
+
   async function handleReport() {
     if (!reportReason.trim()) return
     try {
@@ -201,8 +207,9 @@ function PostCard({ post }: { post: Post }) {
   const authorName = post.author.name || (post.author.email ? post.author.email.split('@')[0] : 'Membre')
 
   return (
-    <article className={`${styles.post} ${post.isHidden ? styles.postHidden : ''}`}>
+    <article className={`${styles.post} ${post.isHidden ? styles.postHidden : ''} ${post.isPinned ? styles.postPinned : ''}`}>
       <h2 className="sr-only">{`Publication de ${authorName}, ${timeAgo}`}</h2>
+      {post.isPinned && <div className={styles.pinnedBadge}>📌 Épinglé</div>}
       {post.isHidden && post.viewerIsAdmin && (
         <div className={styles.hiddenBadge}>🚫 Masqué par un admin</div>
       )}
@@ -225,6 +232,14 @@ function PostCard({ post }: { post: Post }) {
           <span className={styles.postTime}>{timeAgo}</span>
         </div>
         <div className={styles.postActions}>
+          {post.viewerIsAdmin && (
+            <button
+              className={`${styles.actionBtn} ${post.isPinned ? styles.actionBtnActive : ''}`}
+              onClick={handlePin}
+              aria-label={post.isPinned ? 'Désépingler' : 'Épingler'}
+              title={post.isPinned ? 'Désépingler' : 'Épingler'}
+            >📌</button>
+          )}
           {(post.isOwn || post.viewerIsAdmin) && (
             <button className={styles.actionBtn} onClick={handleDelete} aria-label="Supprimer">🗑</button>
           )}

@@ -51,6 +51,7 @@ export const listPosts = query({
           .take(safeLimit)
 
     const visible = isAdmin ? posts : posts.filter((p) => !p.isHidden)
+    visible.sort((a, b) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0))
 
     return Promise.all(
       visible.map(async (post) => {
@@ -85,6 +86,7 @@ export const listPosts = query({
           hasReported: !!userReport,
           isOwn: post.authorId === user._id,
           viewerIsAdmin: isAdmin,
+          isPinned: post.isPinned ?? false,
         }
       }),
     )
@@ -217,6 +219,17 @@ export const hidePost = mutation({
       outcome: 'success',
       severity: 'warning',
     })
+  },
+})
+
+export const pinPost = mutation({
+  args: { postId: v.id('communityPosts'), pinned: v.boolean() },
+  handler: async (ctx, { postId, pinned }) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) throw new Error('Not authenticated')
+    const user = await getUserByClerkId(ctx, identity.subject)
+    if (!user || !ADMIN_ROLES.has(user.role)) throw new Error('Admin only')
+    await ctx.db.patch(postId, { isPinned: pinned })
   },
 })
 

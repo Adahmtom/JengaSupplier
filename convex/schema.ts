@@ -120,6 +120,7 @@ export default defineSchema({
     imageStorageId: v.optional(v.id('_storage')),
     isHidden: v.boolean(),
     hiddenReason: v.optional(v.string()),
+    isPinned: v.optional(v.boolean()),
   })
     .index('by_portal', ['portalId'])
     .index('by_portal_hidden', ['portalId', 'isHidden'])

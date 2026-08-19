@@ -207,6 +207,29 @@
   border-style: dashed;
 }
 
+.postPinned {
+  border-color: var(--color-accent, #f59e0b);
+  background: var(--color-pinned-bg, rgba(245,158,11,0.04));
+}
+
+.pinnedBadge {
+  font-size: 11px;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-accent, #f59e0b);
+  background: rgba(245,158,11,0.1);
+  border-radius: var(--radius-sm);
+  padding: 3px 8px;
+  margin-bottom: var(--space-3);
+  display: inline-block;
+}
+
+.actionBtnActive {
+  color: var(--color-accent, #f59e0b) !important;
+}
+
 .hiddenBadge {
   font-size: 11px;
   font-family: var(--font-sans);
