@@ -128,7 +128,7 @@ export const sendPost = mutation({
     if (!trimmed && !imageStorageId) throw new Error('Post cannot be empty')
     if (trimmed.length > 2000) throw new Error('Post trop long (max 2000 caractères)')
 
-    if (containsPhone(trimmed)) {
+    if (!ADMIN_ROLES.has(user.role) && containsPhone(trimmed)) {
       throw new Error("Les numéros de téléphone ne sont pas autorisés dans la communauté. Utilisez la messagerie privée hors plateforme à vos risques.")
     }
 
@@ -279,7 +279,7 @@ export const sendReply = mutation({
     const trimmed = body.trim()
     if (!trimmed) throw new Error('Reply cannot be empty')
     if (trimmed.length > 1000) throw new Error('Reply too long (max 1000 characters)')
-    if (containsPhone(trimmed)) throw new Error('Phone numbers are not allowed in replies.')
+    if (!ADMIN_ROLES.has(user.role) && containsPhone(trimmed)) throw new Error('Phone numbers are not allowed in replies.')
     return ctx.db.insert('communityReplies', { postId, authorId: user._id, body: trimmed })
   },
 })
