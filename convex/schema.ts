@@ -118,6 +118,7 @@ export default defineSchema({
     authorId: v.id('users'),
     body: v.string(),
     imageStorageId: v.optional(v.id('_storage')),
+    videoStorageId: v.optional(v.id('_storage')),
     isHidden: v.boolean(),
     hiddenReason: v.optional(v.string()),
     isPinned: v.optional(v.boolean()),

@@ -12,6 +12,8 @@ const POSTS_PER_PAGE = 40
 export default function CommunityPage() {
   const [limit, setLimit] = useState(POSTS_PER_PAGE)
   const posts = useQuery(api.community.listPosts, { limit })
+  const me = useQuery(api.users.getMe)
+  const isAdmin = me?.role === 'super_admin' || me?.role === 'admin' || me?.role === 'moderator'
 
   if (posts === undefined) {
     return (
@@ -43,7 +45,7 @@ export default function CommunityPage() {
         </div>
       </header>
 
-      <Composer />
+      <Composer isAdmin={isAdmin} />
 
       <section
         className={styles.feed}
@@ -69,51 +71,59 @@ export default function CommunityPage() {
   )
 }
 
-function Composer() {
+function Composer({ isAdmin }: { isAdmin: boolean }) {
   const sendPost = useMutation(api.community.sendPost)
   const generateUrl = useMutation(api.community.generateUploadUrl)
 
   const [body, setBody] = useState('')
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [videoFile, setVideoFile] = useState<File | null>(null)
+  const [videoPreview, setVideoPreview] = useState<string | null>(null)
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
+  const videoRef = useRef<HTMLInputElement>(null)
   const textRef = useRef<HTMLTextAreaElement>(null)
 
   function pickImage(file: File) {
     setImageFile(file)
+    setVideoFile(null); setVideoPreview(null)
     setImagePreview(URL.createObjectURL(file))
   }
 
-  function removeImage() {
-    setImageFile(null)
-    setImagePreview(null)
+  function pickVideo(file: File) {
+    setVideoFile(file)
+    setImageFile(null); setImagePreview(null)
+    setVideoPreview(URL.createObjectURL(file))
+  }
+
+  function removeMedia() {
+    setImageFile(null); setImagePreview(null)
+    setVideoFile(null); setVideoPreview(null)
     if (fileRef.current) fileRef.current.value = ''
+    if (videoRef.current) videoRef.current.value = ''
+  }
+
+  async function uploadFile(file: File) {
+    const url = await generateUrl()
+    const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': file.type }, body: file })
+    if (!res.ok) throw new Error(`Échec de l'upload (${res.status})`)
+    const { storageId } = await res.json()
+    return storageId as import('convex/values').GenericId<'_storage'>
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!body.trim() && !imageFile) return
+    if (!body.trim() && !imageFile && !videoFile) return
     setSending(true)
     setError('')
     try {
-      let imageStorageId: import('convex/values').GenericId<'_storage'> | undefined
-      if (imageFile) {
-        const url = await generateUrl()
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': imageFile.type },
-          body: imageFile,
-        })
-        if (!res.ok) throw new Error(`Échec de l'upload (${res.status})`)
-        const { storageId } = await res.json()
-        imageStorageId = storageId as import('convex/values').GenericId<'_storage'>
-
-      }
-      await sendPost({ body, imageStorageId })
+      const imageStorageId = imageFile ? await uploadFile(imageFile) : undefined
+      const videoStorageId = videoFile ? await uploadFile(videoFile) : undefined
+      await sendPost({ body, imageStorageId, videoStorageId })
       setBody('')
-      removeImage()
+      removeMedia()
       textRef.current?.focus()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur lors de la publication.')
@@ -139,7 +149,14 @@ function Composer() {
         <div className={styles.previewWrap}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={imagePreview} alt="Aperçu" className={styles.previewImg} />
-          <button type="button" className={styles.previewRemove} onClick={removeImage} aria-label="Supprimer l'image">✕</button>
+          <button type="button" className={styles.previewRemove} onClick={removeMedia} aria-label="Supprimer">✕</button>
+        </div>
+      )}
+      {videoPreview && (
+        <div className={styles.previewWrap}>
+          {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+          <video src={videoPreview} className={styles.previewImg} controls style={{ borderRadius: 8 }} />
+          <button type="button" className={styles.previewRemove} onClick={removeMedia} aria-label="Supprimer la vidéo">✕</button>
         </div>
       )}
       {error && <p className={styles.composerError} role="alert">{error}</p>}
@@ -154,8 +171,22 @@ function Composer() {
           style={{ display: 'none' }}
           onChange={(e) => { const f = e.target.files?.[0]; if (f) pickImage(f) }}
         />
+        {isAdmin && (
+          <>
+            <button type="button" className={styles.attachBtn} onClick={() => videoRef.current?.click()} aria-label="Ajouter une vidéo">
+              🎬 Vidéo
+            </button>
+            <input
+              ref={videoRef}
+              type="file"
+              accept="video/mp4,video/webm,video/quicktime,video/mov"
+              style={{ display: 'none' }}
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) pickVideo(f) }}
+            />
+          </>
+        )}
         <span className={styles.charCount} aria-hidden="true">{body.length}/2000</span>
-        <button type="submit" className={styles.sendBtn} disabled={sending || (!body.trim() && !imageFile)}>
+        <button type="submit" className={styles.sendBtn} disabled={sending || (!body.trim() && !imageFile && !videoFile)}>
           {sending ? 'Envoi…' : 'Publier'}
         </button>
       </div>
@@ -263,6 +294,17 @@ function PostCard({ post }: { post: Post }) {
             height={400}
             style={{ width: '100%', height: 'auto' }}
             unoptimized
+          />
+        </div>
+      )}
+      {post.videoUrl && (
+        <div className={styles.postImageWrap}>
+          {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+          <video
+            src={post.videoUrl}
+            className={styles.postImage}
+            controls
+            style={{ width: '100%', borderRadius: 8 }}
           />
         </div>
       )}

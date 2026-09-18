@@ -55,10 +55,11 @@ export const listPosts = query({
 
     return Promise.all(
       visible.map(async (post) => {
-        const [author, reactions, imageUrl, userReport] = await Promise.all([
+        const [author, reactions, imageUrl, videoUrl, userReport] = await Promise.all([
           ctx.db.get(post.authorId),
           ctx.db.query('communityReactions').withIndex('by_post', (q) => q.eq('postId', post._id)).collect(),
           post.imageStorageId ? ctx.storage.getUrl(post.imageStorageId) : null,
+          post.videoStorageId ? ctx.storage.getUrl(post.videoStorageId) : null,
           ctx.db.query('communityReports').withIndex('by_post', (q) => q.eq('postId', post._id))
             .filter((q) => q.eq(q.field('reportedBy'), user._id)).first(),
         ])
@@ -83,6 +84,7 @@ export const listPosts = query({
           author: { name: author?.name, email: author?.email, imageUrl: author?.imageUrl, role: author?.role },
           reactions: reactionList,
           imageUrl,
+          videoUrl,
           hasReported: !!userReport,
           isOwn: post.authorId === user._id,
           viewerIsAdmin: isAdmin,
@@ -121,24 +123,28 @@ export const sendPost = mutation({
     portalId: v.optional(v.id('portals')),
     body: v.string(),
     imageStorageId: v.optional(v.id('_storage')),
+    videoStorageId: v.optional(v.id('_storage')),
   },
-  handler: async (ctx, { portalId, body, imageStorageId }) => {
+  handler: async (ctx, { portalId, body, imageStorageId, videoStorageId }) => {
     const user = await requireMember(ctx)
     await rateLimiter.limit(ctx, 'sendPost', { key: user._id, throws: true })
 
     const trimmed = body.trim()
-    if (!trimmed && !imageStorageId) throw new Error('Post cannot be empty')
+    if (!trimmed && !imageStorageId && !videoStorageId) throw new Error('Post cannot be empty')
     if (trimmed.length > 2000) throw new Error('Post trop long (max 2000 caractères)')
 
     if (!ADMIN_ROLES.has(user.role) && containsPhone(trimmed)) {
       throw new Error("Les numéros de téléphone ne sont pas autorisés dans la communauté. Utilisez la messagerie privée hors plateforme à vos risques.")
     }
 
+    if (videoStorageId && !ADMIN_ROLES.has(user.role)) throw new Error('Video upload is admin-only.')
+
     return ctx.db.insert('communityPosts', {
       portalId,
       authorId: user._id,
       body: trimmed,
       imageStorageId,
+      videoStorageId,
       isHidden: false,
     })
   },
