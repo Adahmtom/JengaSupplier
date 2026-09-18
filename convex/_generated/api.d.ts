@@ -21,6 +21,7 @@ import type * as lib_permissions from "../lib/permissions.js";
 import type * as lib_rateLimiter from "../lib/rateLimiter.js";
 import type * as monitor from "../monitor.js";
 import type * as portals from "../portals.js";
+import type * as seedAug2026Phones from "../seedAug2026Phones.js";
 import type * as seedBelleVendors from "../seedBelleVendors.js";
 import type * as seedJuly2026Suppliers from "../seedJuly2026Suppliers.js";
 import type * as seedNewSuppliers from "../seedNewSuppliers.js";
@@ -51,6 +52,7 @@ declare const fullApi: ApiFromModules<{
   "lib/rateLimiter": typeof lib_rateLimiter;
   monitor: typeof monitor;
   portals: typeof portals;
+  seedAug2026Phones: typeof seedAug2026Phones;
   seedBelleVendors: typeof seedBelleVendors;
   seedJuly2026Suppliers: typeof seedJuly2026Suppliers;
   seedNewSuppliers: typeof seedNewSuppliers;
